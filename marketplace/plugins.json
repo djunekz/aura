@@ -1,0 +1,12 @@
+[
+  {
+    "name": "AutoBackup",
+    "url": "https://raw.githubusercontent.com/djunekz/aura/main/core/plugins/autobackup.js",
+    "description": "Automatically backup modified files every 5 minutes"
+  },
+  {
+    "name": "AutoDeploy",
+    "url": "https://raw.githubusercontent.com/djunekz/aura/main/core/plugins/autodeploy.js",
+    "description": "Suggest or auto-run deployment scripts when network is online"
+  }
+]
