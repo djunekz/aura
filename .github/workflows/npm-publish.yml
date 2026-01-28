@@ -22,44 +22,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Pastikan push tag dan commit berhasil
-          token: ${{ secrets.GH_PAT }}
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://npm.pkg.github.com/
 
-      # Setup Git Identity agar commit berhasil
       - name: Setup Git Identity
         run: |
-          git config user.name "hmei7"
+          git config user.name "Hmei7"
           git config user.email "hmei7@anonymous.com"
 
-      # Bump version patch & output ke variable
       - name: Bump Version
         id: version
         run: |
           NEW_VERSION=$(npm version patch --no-git-tag-version)
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      # Commit package.json dan buat tag baru
       - name: Commit & Tag
         run: |
           git add package.json
-          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }} [skip ci]" || echo "No changes to commit"
+          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }} [skip ci]"
           git tag ${{ steps.version.outputs.new_version }}
           git push origin main --follow-tags
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
 
-      # Publish ke GitHub Packages
       - name: Publish to GitHub Packages
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Buat GitHub Release otomatis
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
