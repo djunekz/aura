@@ -1,4 +1,4 @@
-name: Auto Publish Node.js Package
+name: Auto Release & Publish Node.js Package
 
 on:
   push:
@@ -28,10 +28,31 @@ jobs:
       - name: Setup Git remote with PAT
         run: git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/djunekz/aura.git
 
+      - name: Determine Version Bump
+        id: bump
+        run: |
+          # Default to patch
+          TYPE="patch"
+          LAST_COMMIT=$(git log -1 --pretty=%B)
+          if [[ "$LAST_COMMIT" == *"[minor]"* ]]; then TYPE="minor"; fi
+          if [[ "$LAST_COMMIT" == *"[major]"* ]]; then TYPE="major"; fi
+          echo "Bump type: $TYPE"
+          echo "type=$TYPE" >> $GITHUB_OUTPUT
+
       - name: Bump Version
         run: |
-          npm version patch --allow-same-version -m "chore: bump version to %s [skip ci]"
+          npm version ${{ steps.bump.outputs.type }} --allow-same-version -m "chore: bump version to %s [skip ci]"
           git push origin main --follow-tags
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ steps.bump.outputs.type }}
+          release_name: AURA-Terminal ${{ steps.bump.outputs.type }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
 
       - name: Publish to GitHub Packages
         run: npm publish
