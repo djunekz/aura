@@ -41,7 +41,7 @@ jobs:
       - name: Bump Version
         id: npm_version
         run: |
-          NEW_VERSION=$(npm version ${{ steps.bump.outputs.type }} --allow-same-version -m "Auto update to version to %s")
+          NEW_VERSION=$(npm version ${{ steps.bump.outputs.type }} --allow-same-version -m "Auto update to version to %s [skip ci]")
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           git push origin main --follow-tags
 
