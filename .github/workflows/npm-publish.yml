@@ -30,8 +30,8 @@ jobs:
       # Setup Git Identity agar commit bisa berhasil
       - name: Setup Git Identity
         run: |
-          git config user.name "hmei7"
-          git config user.email "hmei7@hmei7.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       # Bump version (patch) dan simpan ke output
       - name: Bump Version
