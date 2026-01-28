@@ -35,7 +35,7 @@ jobs:
       - name: Bump Version
         run: |
           npm version patch --allow-same-version -m "chore: bump version to %s [skip ci]"
-          git push https://x-access-token:${{ secrets.pat }}@github.com/djunekz/aura.git main --follow-tags
+          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/djunekz/aura.git main --follow-tags
 
       - name: Publish to GitHub Packages
         run: npm publish
