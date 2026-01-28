@@ -31,8 +31,8 @@ jobs:
 
       - name: Setup Git Identity
         run: |
-          git config user.name "Hmei7"
-          git config user.email "hmei7@anonymous.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Bump Version
         id: version
