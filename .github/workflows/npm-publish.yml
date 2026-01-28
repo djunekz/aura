@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-
   workflow_dispatch:
 
 jobs:
@@ -22,30 +21,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Pastikan push tag dan commit berhasil
+          token: ${{ secrets.GH_PAT }}
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://npm.pkg.github.com/
 
-      # Setup Git Identity agar commit bisa berhasil
+      # Setup Git Identity agar commit berhasil
       - name: Setup Git Identity
         run: |
-          git config user.name "Hmei7"
-          git config user.email "hmei7@anonymous.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Bump version (patch) dan simpan ke output
+      # Bump version patch & output ke variable
       - name: Bump Version
         id: version
         run: |
           NEW_VERSION=$(npm version patch --no-git-tag-version)
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      # Commit package.json & tag baru
+      # Commit package.json dan buat tag baru
       - name: Commit & Tag
         run: |
           git add package.json
-          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }} [skip ci]"
+          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }} [skip ci]" || echo "No changes to commit"
           git tag ${{ steps.version.outputs.new_version }}
           git push origin main --follow-tags
         env:
@@ -57,7 +59,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Buat Release otomatis di GitHub
+      # Buat GitHub Release otomatis
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
@@ -67,4 +69,4 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.gh_token }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
