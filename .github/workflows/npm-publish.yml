@@ -10,17 +10,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          node-version: 20
-      - run: echo "✅ Build ready"
-
-  bump-and-publish:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
@@ -32,10 +25,13 @@ jobs:
           git config user.name "AURA Publish Bot"
           git config user.email "aura-bot@users.noreply.github.com"
 
+      - name: Setup Git remote with PAT
+        run: git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/djunekz/aura.git
+
       - name: Bump Version
         run: |
           npm version patch --allow-same-version -m "chore: bump version to %s [skip ci]"
-          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/djunekz/aura.git main --follow-tags
+          git push origin main --follow-tags
 
       - name: Publish to GitHub Packages
         run: npm publish
