@@ -31,7 +31,7 @@ jobs:
       - name: Setup Git Identity
         run: |
           git config user.name "hmei7"
-          git config user.email "github-hmei7-official@users.noreply.github.com"
+          git config user.email "hmei7@hmei7.com"
 
       # Bump version (patch) dan simpan ke output
       - name: Bump Version
