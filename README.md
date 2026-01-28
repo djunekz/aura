@@ -27,23 +27,23 @@ Membantu otomatisasi workflow, backup, deploy, auto Git push, scheduler, plugin,
 ## 2. Instalasi
 
 ### 2.1 Via GitHub
-\`\`\`bash
+```bash
 git clone https://github.com/djunekz/aura
 cd aura
 npm install -g .
-\`\`\`
+```
 
 ### 2.2 Via NPM
-\`\`\`bash
+```bash
 npm install -g aura-terminal
-\`\`\`
+```
 
 ---
 
 ## 3. Menjalankan AURA
-\`\`\`bash
+```bash
 aura
-\`\`\`
+```
 > CLI interaktif akan muncul dengan dashboard, logs, dan AI suggestion.
 
 ---
@@ -92,21 +92,21 @@ MIT License © 2026 djunekz
 ## 8. Tips Penggunaan
 
 1. **Environment Variable untuk GitHub PAT** (untuk AutoDeploy otomatis):
-\`\`\`bash
+```bash
 export GITHUB_TOKEN=ghp_xxxxyyyyzzz
-\`\`\`
+```
 
 2. **Menjalankan Scheduler**
-\`\`\`bash
+```text
 scheduler add AutoBackup 300    # Backup setiap 5 menit
 scheduler add AutoPush 600      # Auto push setiap 10 menit
-\`\`\`
+```
 
 3. **Update Core & Plugin**
-\`\`\`bash
+```bash
 npm run auto-update
 npm run update-plugins
-\`\`\`
+```
 
 4. **Dashboard**
 - Refresh otomatis setiap 2 detik.
