@@ -1,15 +1,25 @@
-name: Auto Publish NPM Package
+name: Auto Publish Node.js Package
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  bump-and-publish:
+  build:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: echo "✅ Build ready"
 
+  bump-and-publish:
+    needs: build
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -18,14 +28,19 @@ jobs:
           node-version: 20
           registry-url: https://npm.pkg.github.com/
 
-      - run: npm install
+      - name: Setup Git Identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Bump version
+      - name: Bump Version
         run: |
           npm version patch -m "chore: bump version to %s [skip ci]"
           git push origin main --follow-tags
 
-      - name: Publish Package
+      - run: npm ci
+
+      - name: Publish to GitHub Packages
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
