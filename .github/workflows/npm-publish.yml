@@ -20,6 +20,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # Checkout repo tanpa pakai token default agar bisa push pakai PAT
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -29,31 +30,36 @@ jobs:
           node-version: 20
           registry-url: https://npm.pkg.github.com/
 
+      # Setup Git identity untuk commit
       - name: Setup Git Identity
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      # Bump versi patch dan simpan ke output
       - name: Bump Version
         id: version
         run: |
           NEW_VERSION=$(npm version patch --no-git-tag-version)
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
+      # Commit package.json & push + tag dengan PAT
       - name: Commit & Tag
         run: |
           git add package.json
-          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }} [skip ci]"
+          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }} [skip ci]" || echo "No changes to commit"
           git tag ${{ steps.version.outputs.new_version }}
-          git push origin main --follow-tags
+          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/djunekz/aura.git main --follow-tags
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
 
+      # Publish ke GitHub Packages
       - name: Publish to GitHub Packages
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      # Buat release otomatis
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
