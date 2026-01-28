@@ -1,6 +1,6 @@
 {
   "name": "@djunekz/aura-terminal",
-  "version": "0.8.12",
+  "version": "0.8.13",
   "description": "Adaptive Unified Runtime Assistant (mini OS-Layer)",
   "author": "djunekz",
   "publishConfig": {
