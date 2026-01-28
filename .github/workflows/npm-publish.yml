@@ -20,43 +20,43 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # Checkout repo
       - uses: actions/checkout@v4
 
+      # Setup Node.js untuk publish
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://npm.pkg.github.com/
 
-      # Setup Git Identity
+      # Setup Git identity agar commit bisa berhasil
       - name: Setup Git Identity
         run: |
-          git config user.name "Hmei7"
-          git config user.email "hmei7@users.noreply.github.com"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
 
-      # Bump version (patch) dan simpan output
+      # Bump version patch (tidak bikin tag otomatis)
       - name: Bump Version
         id: version
         run: |
           NEW_VERSION=$(npm version patch --no-git-tag-version)
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      # Commit & push version baru + tag
-      - name: Commit & Tag
+      # Commit dan push version bump dengan GH_PAT
+      - name: Commit & Push
         run: |
           git add package.json
           git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }} [skip ci]"
           git tag ${{ steps.version.outputs.new_version }}
           git push https://${{ secrets.GH_PAT }}@github.com/djunekz/aura.git main --follow-tags
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
 
-      # Publish ke GitHub Packages
+      # Publish package ke GitHub Packages
       - name: Publish to GitHub Packages
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Buat Release otomatis di GitHub
+      # Buat GitHub Release otomatis
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
