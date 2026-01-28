@@ -29,13 +29,13 @@ jobs:
 
       - name: Setup Git Identity
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "AURA Publish Bot"
+          git config user.email "aura-bot@users.noreply.github.com"
 
       - name: Bump Version
         run: |
-          npm version patch -m "chore: bump version to %s [skip ci]"
-          git push origin main --follow-tags
+          npm version patch --allow-same-version -m "chore: bump version to %s [skip ci]"
+          git push https://x-access-token:${{ secrets.pat }}@github.com/djunekz/aura.git main --follow-tags
 
       - name: Publish to GitHub Packages
         run: npm publish
