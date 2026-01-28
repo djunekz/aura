@@ -31,7 +31,6 @@ jobs:
       - name: Determine Version Bump
         id: bump
         run: |
-          # Default to patch
           TYPE="patch"
           LAST_COMMIT=$(git log -1 --pretty=%B)
           if [[ "$LAST_COMMIT" == *"[minor]"* ]]; then TYPE="minor"; fi
@@ -40,15 +39,17 @@ jobs:
           echo "type=$TYPE" >> $GITHUB_OUTPUT
 
       - name: Bump Version
+        id: npm_version
         run: |
-          npm version ${{ steps.bump.outputs.type }} --allow-same-version -m "chore: bump version to %s [skip ci]"
+          NEW_VERSION=$(npm version ${{ steps.bump.outputs.type }} --allow-same-version -m "chore: bump version to %s [skip ci]")
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           git push origin main --follow-tags
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
         with:
-          tag_name: v${{ steps.bump.outputs.type }}
-          release_name: AURA-Terminal ${{ steps.bump.outputs.type }}
+          tag_name: ${{ steps.npm_version.outputs.new_version }}
+          release_name: AURA-Terminal ${{ steps.npm_version.outputs.new_version }}
           draft: false
           prerelease: false
         env:
