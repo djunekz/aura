@@ -20,36 +20,33 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      # Checkout repo tanpa pakai token default agar bisa push pakai PAT
       - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://npm.pkg.github.com/
 
-      # Setup Git identity untuk commit
+      # Setup Git Identity
       - name: Setup Git Identity
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "AURA-Bot"
+          git config user.email "aura-bot@users.noreply.github.com"
 
-      # Bump versi patch dan simpan ke output
+      # Bump Version (patch) tanpa auto-tag
       - name: Bump Version
         id: version
         run: |
           NEW_VERSION=$(npm version patch --no-git-tag-version)
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      # Commit package.json & push + tag dengan PAT
-      - name: Commit & Tag
+      # Commit package.json & push
+      - name: Commit & Push
         run: |
           git add package.json
-          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }} [skip ci]" || echo "No changes to commit"
+          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }} [skip ci]"
           git tag ${{ steps.version.outputs.new_version }}
-          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/djunekz/aura.git main --follow-tags
+          git push origin main --follow-tags
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
 
@@ -59,7 +56,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Buat release otomatis
+      # Buat Release otomatis di GitHub
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
