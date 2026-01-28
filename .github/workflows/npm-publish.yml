@@ -33,8 +33,8 @@ jobs:
 
       - name: Setup Git Identity
         run: |
-          git config user.name "Denis Ardiyanata"
-          git config user.email "emailkamu@example.com"
+          git config user.name "Anonymous"
+          git config user.email "anonymous@github.com"
 
       - name: Bump Version & Create Tag
         run: |
