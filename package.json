@@ -1,20 +1,58 @@
 {
   "name": "@djunekz/aura-terminal",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "description": "Adaptive Unified Runtime Assistant (mini OS-Layer)",
   "author": "djunekz",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+  "license": "MIT",
+
+  "type": "module",
+
+  "main": "./aura.js",
+  "exports": {
+    ".": "./aura.js"
   },
-  "main": "aura.js",
+
   "bin": {
     "aura": "./aura.js"
   },
+
+  "files": [
+    "aura.js",
+    "core/",
+    "marketplace/",
+    "README.md",
+    "LICENSE"
+  ],
+
   "scripts": {
     "start": "node aura.js",
-    "update-plugins": "node -e \"require('./core/plugin').updateAll()\"",
+    "update-plugins": "node core/plugin.js",
     "auto-update": "git pull origin main && npm install"
   },
+
+  "publishConfig": {
+    "access": "public"
+  },
+
+  "keywords": [
+    "cli",
+    "terminal",
+    "assistant",
+    "os-layer",
+    "automation",
+    "termux",
+    "tui"
+  ],
+
+  "engines": {
+    "node": ">=18"
+  },
+
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/djunekz/aura.git"
+  },
+
   "dependencies": {
     "axios": "^1.6.0",
     "blessed": "^0.1.81",
@@ -29,13 +67,5 @@
     "qs": "^6.14.1",
     "tough-cookie": "^4.1.4",
     "xml2js": "^0.5.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/djunekz/aura.git"
-  },
-  "license": "MIT"
+  }
 }
