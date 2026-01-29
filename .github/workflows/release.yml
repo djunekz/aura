@@ -1,4 +1,4 @@
-name: Auto Release & Publish (npm + gh)
+name: Release & Publish (npmjs)
 
 on:
   push:
@@ -6,7 +6,6 @@ on:
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
   release:
@@ -21,50 +20,41 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+          always-auth: true
 
       - name: Install deps
-        run: npm install
+        run: npm install --ignore-scripts
 
-      - name: Setup git
+      - name: Setup git identity
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Bump version (patch)
         id: bump
         run: |
-          NEW_VERSION=$(npm version patch --no-git-tag-version)
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          VERSION=$(npm version patch --no-git-tag-version)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Commit & tag
         run: |
-          git add package.json package-lock.json || true
+          git add package.json
           git commit -m "chore: release ${{ steps.bump.outputs.version }} [skip ci]"
           git tag ${{ steps.bump.outputs.version }}
           git push origin main --tags
 
-      # === Publish ke npmjs.org ===
       - name: Publish to npmjs
-        run: npm publish --access public
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      # === Publish ke GitHub Packages ===
-      - name: Setup GitHub registry
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          registry-url: https://npm.pkg.github.com/
-
-      - name: Publish to GitHub Packages
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.bump.outputs.version }}
-          name: AURA ${{ steps.bump.outputs.version }}
+          name: AURA-Terminal ${{ steps.bump.outputs.version }}
           generateReleaseNotes: true
