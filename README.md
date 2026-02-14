@@ -30,12 +30,12 @@ Membantu otomatisasi workflow, backup, deploy, auto Git push, scheduler, plugin,
 ```bash
 git clone https://github.com/djunekz/aura
 cd aura
-npm install -g .
+npm install
 ```
 
 ### 2.2 Via NPM
 ```bash
-npm install -g aura-terminal
+npm install aura-terminal
 ```
 
 ---
