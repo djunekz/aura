@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-const Kernel = require('./core/kernel');
-const chalk = require('chalk');
+import Kernel from './core/kernel.js';
+import chalk from 'chalk';
 
 console.log(chalk.cyan.bold("🔥 Welcome to AURA 🔥"));
 

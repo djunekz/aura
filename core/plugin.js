@@ -1,80 +1,162 @@
-const fs = require('fs');
-const path = require('path');
-const chalk = require('chalk');
-const axios = require('axios');
+import fs from 'fs'
+import path from 'path'
+import chalk from 'chalk'
+import { fileURLToPath, pathToFileURL } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const MARKETPLACE_URL = 'https://raw.githubusercontent.com/djunekz/aura/main/marketplace/plugins.json'
 
 class PluginManager {
   constructor(kernel) {
-    this.kernel = kernel;
-    this.plugins = [];
-    this.pluginDir = path.join(__dirname, 'plugins');
-    if(!fs.existsSync(this.pluginDir)) fs.mkdirSync(this.pluginDir);
+    this.kernel = kernel
+    this.plugins = []
+    this.pluginsDir = path.join(__dirname, 'plugins')
   }
 
-  // Load semua plugin lokal
-  loadPlugins() {
-    const files = fs.readdirSync(this.pluginDir).filter(f => f.endsWith('.js'));
-    files.forEach(file => {
+  async loadPlugins() {
+    if (!fs.existsSync(this.pluginsDir)) {
+      fs.mkdirSync(this.pluginsDir, { recursive: true })
+      return
+    }
+
+    const files = fs.readdirSync(this.pluginsDir).filter(f => f.endsWith('.js'))
+
+    for (const file of files) {
       try {
-        const plugin = require(path.join(this.pluginDir, file));
-        if(plugin.init) plugin.init(this.kernel);
-        this.plugins.push(plugin);
-        console.log(chalk.green(`🔌 Loaded plugin: ${file}`));
+        const filePath = path.join(this.pluginsDir, file)
+        const mod = await import(pathToFileURL(filePath).href)
+        const plugin = mod.default
+        if (!plugin) continue
+
+        plugin._filename = file
+        if (typeof plugin.init === 'function') plugin.init(this.kernel)
+        this.plugins.push(plugin)
       } catch (err) {
-        console.log(chalk.red(`❌ Failed to load plugin ${file}: ${err.message}`));
+        // silent — init phase
       }
-    });
+    }
   }
 
-  // Install plugin dari file lokal
+  listPlugins() {
+    if (this.plugins.length === 0) {
+      console.log(chalk.yellow('Tidak ada plugin yang terinstall.'))
+      return
+    }
+    console.log(chalk.blue.bold('\n── Installed Plugins ───────────────────'))
+    this.plugins.forEach(p => {
+      const name = p.name || p._filename || 'Unknown'
+      const desc = p.description || ''
+      const ver  = p.version ? chalk.gray(`v${p.version}`) : ''
+      console.log(chalk.green(`  ✓ ${name} ${ver}`) + (desc ? chalk.gray(`\n    ${desc}`) : ''))
+    })
+    console.log(chalk.blue('────────────────────────────────────────\n'))
+  }
+
   installPlugin(pluginPath) {
     try {
-      const dest = path.join(this.pluginDir, path.basename(pluginPath));
-      fs.copyFileSync(pluginPath, dest);
-      console.log(chalk.cyan(`Plugin installed: ${path.basename(pluginPath)}`));
-      this.loadPlugins();
+      if (!fs.existsSync(pluginPath)) {
+        console.log(chalk.red(`❌ File tidak ditemukan: ${pluginPath}`))
+        return
+      }
+      const dest = path.join(this.pluginsDir, path.basename(pluginPath))
+      fs.copyFileSync(pluginPath, dest)
+      console.log(chalk.green(`✅ Plugin installed: ${path.basename(pluginPath)}`))
+      console.log(chalk.gray('   Restart aura untuk memuat plugin baru.'))
     } catch (err) {
-      console.log(chalk.red(`❌ Failed to install plugin: ${err.message}`));
+      console.log(chalk.red(`❌ Install failed: ${err.message}`))
     }
   }
 
-  // Install plugin dari URL (Online Marketplace)
   async installPluginFromURL(url) {
     try {
-      const name = path.basename(url);
-      const dest = path.join(this.pluginDir, name);
-      const response = await axios.get(url);
-      fs.writeFileSync(dest, response.data);
-      console.log(chalk.green(`Plugin ${name} installed from URL`));
-      this.loadPlugins();
+      console.log(chalk.cyan(`⬇️  Downloading: ${url}`))
+      const { default: axios } = await import('axios')
+      const res = await axios.get(url, { responseType: 'text' })
+      const filename = path.basename(new URL(url).pathname) || 'plugin-remote.js'
+      const dest = path.join(this.pluginsDir, filename)
+      fs.mkdirSync(this.pluginsDir, { recursive: true })
+      fs.writeFileSync(dest, res.data)
+      console.log(chalk.green(`✅ Plugin disimpan: ${filename}`))
+      console.log(chalk.gray('   Restart aura untuk memuat plugin baru.'))
     } catch (err) {
-      console.log(chalk.red(`❌ Failed to install plugin from URL: ${err.message}`));
+      console.log(chalk.red(`❌ Download failed: ${err.message}`))
     }
   }
 
-  // Update plugin (re-download / reload)
-  async updatePlugin(name, url=null) {
+  updatePlugin(name) {
+    const plugin = this.plugins.find(p => (p.name || p._filename) === name)
+    if (!plugin) {
+      console.log(chalk.red(`Plugin "${name}" tidak ditemukan.`))
+      return
+    }
+    console.log(chalk.yellow(`🔄 Update "${name}" belum diimplementasi.`))
+  }
+
+  async marketplaceList() {
     try {
-      const pluginPath = path.join(this.pluginDir, name);
-      if(url){
-        const response = await axios.get(url);
-        fs.writeFileSync(pluginPath, response.data);
-        console.log(chalk.green(`Plugin ${name} updated from URL`));
+      console.log(chalk.cyan('🛒 Mengambil daftar plugin dari marketplace...\n'))
+      const { default: axios } = await import('axios')
+      const res = await axios.get(MARKETPLACE_URL, { timeout: 5000 })
+      const plugins = Array.isArray(res.data) ? res.data : (res.data.plugins || [])
+
+      if (plugins.length === 0) {
+        console.log(chalk.yellow('Marketplace kosong.'))
+        return
       }
-      delete require.cache[require.resolve(pluginPath)];
-      const plugin = require(pluginPath);
-      if(plugin.init) plugin.init(this.kernel);
-      console.log(chalk.green(`Plugin ${name} reloaded successfully`));
+
+      const installed = this.plugins.map(p => p.name || p._filename)
+
+      console.log(chalk.blue.bold('── Marketplace ─────────────────────────'))
+      plugins.forEach(p => {
+        const isInstalled = installed.includes(p.name)
+        const status = isInstalled ? chalk.green(' [installed]') : ''
+        console.log(chalk.yellow(`  ${p.name}`) + chalk.gray(` v${p.version}`) + status)
+        console.log(chalk.white(`    ${p.description}`))
+        console.log(chalk.gray(`    Install: aura plugin install-url ${p.url}\n`))
+      })
+      console.log(chalk.blue('────────────────────────────────────────\n'))
     } catch (err) {
-      console.log(chalk.red(`❌ Failed to update plugin ${name}: ${err.message}`));
+      // Fallback ke index lokal jika tidak ada internet
+      const localIndex = path.resolve(__dirname, '..', 'marketplace', 'plugins.json')
+      if (fs.existsSync(localIndex)) {
+        try {
+          const data = JSON.parse(fs.readFileSync(localIndex, 'utf-8'))
+          const plugins = Array.isArray(data) ? data : (data.plugins || [])
+          console.log(chalk.yellow('⚠️  Offline — menampilkan marketplace lokal:\n'))
+          console.log(chalk.blue.bold('── Marketplace (lokal) ─────────────────'))
+          plugins.forEach(p => {
+            console.log(chalk.yellow(`  ${p.name}`) + chalk.gray(` v${p.version}`))
+            console.log(chalk.white(`    ${p.description}\n`))
+          })
+          console.log(chalk.blue('────────────────────────────────────────\n'))
+          return
+        } catch {}
+      }
+      console.log(chalk.red(`❌ Marketplace tidak tersedia: ${err.message}`))
     }
   }
 
-  // List plugin
-  listPlugins() {
-    console.log(chalk.yellow('🔌 Installed Plugins:'));
-    this.plugins.forEach(p => console.log(`- ${p.name || 'Unnamed Plugin'}`));
+  async marketplaceInstall(name) {
+    try {
+      console.log(chalk.cyan(`🛒 Mencari "${name}" di marketplace...`))
+      const { default: axios } = await import('axios')
+      const res = await axios.get(MARKETPLACE_URL, { timeout: 5000 })
+      const plugins = Array.isArray(res.data) ? res.data : (res.data.plugins || [])
+      const found = plugins.find(p => p.name === name)
+
+      if (!found) {
+        console.log(chalk.red(`❌ Plugin "${name}" tidak ditemukan di marketplace.`))
+        console.log(chalk.gray('   Cek daftar plugin: marketplace list'))
+        return
+      }
+
+      await this.installPluginFromURL(found.url)
+    } catch (err) {
+      console.log(chalk.red(`❌ Marketplace install gagal: ${err.message}`))
+    }
   }
 }
 
-module.exports = PluginManager;
+export default PluginManager

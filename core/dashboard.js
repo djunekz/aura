@@ -1,93 +1,119 @@
-const blessed = require('blessed');
-const contrib = require('blessed-contrib');
-const chalk = require('chalk');
+// dashboard.js
+// Replaces the old blessed-in-main-process Dashboard.
+// Spawns dashboard-process.js as a child process (separate terminal window or detached),
+// then pushes state updates via IPC — so blessed NEVER touches the CLI terminal.
+
+import { fork } from 'child_process'
+import { fileURLToPath } from 'url'
+import path from 'path'
+import chalk from 'chalk'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 class Dashboard {
   constructor(kernel) {
-    this.kernel = kernel;
+    this.kernel = kernel
+    this.child = null
+    this.ready = false
+
+    this._spawn()
+  }
+
+  _spawn() {
+    const dashboardPath = path.resolve(__dirname, 'dashboard-process.js')
 
     try {
-      // Setup screen
-      this.screen = blessed.screen({ smartCSR: true, title: 'AURA Dashboard' });
+      // `fork` gives us IPC for free (process.send / process.on('message'))
+      // stdio: 'inherit' would share the terminal — we use 'ignore' + a new console
+      // instead we open a new terminal window so blessed gets its own TTY
+      this.child = fork(dashboardPath, [], {
+        detached: false,
+        // Give the child process its own stdio so blessed can own that TTY.
+        // We try to open a new terminal window; if that fails, fall back to piped.
+        stdio: ['ignore', 'ignore', 'pipe', 'ipc']
+      })
 
-      // Grid layout
-      this.grid = contrib.grid({ rows: 12, cols: 12, screen: this.screen });
+      this.child.on('error', (err) => {
+        console.error(chalk.yellow('[Dashboard] Child process error:'), err.message)
+        this.child = null
+        this.ready = false
+      })
 
-      // Components
-      this.logBox = this.grid.set(
-        6, 0, 6, 12,
-        blessed.log,
-        {
-          label: 'Logs',
-          border: 'line',
-          scrollbar: { ch: ' ', track: { bg: 'yellow' }, style: { inverse: true } },
-          tags: true
+      this.child.on('exit', (code) => {
+        if (code !== 0 && code !== null) {
+          console.error(chalk.yellow(`[Dashboard] Child exited with code ${code}. Dashboard disabled.`))
         }
-      );
+        this.child = null
+        this.ready = false
+      })
 
-      this.userBox = this.grid.set(0, 0, 6, 4, blessed.box, { label: 'User', border: 'line' });
-      this.memoryBox = this.grid.set(0, 4, 6, 4, blessed.box, { label: 'Memory', border: 'line' });
-      this.networkBox = this.grid.set(0, 8, 6, 4, blessed.box, { label: 'Network', border: 'line' });
+      this.child.stderr?.on('data', (data) => {
+        // Surface blessed errors without polluting CLI stdout
+        process.stderr.write(chalk.yellow('[Dashboard] ') + data.toString())
+      })
 
-      // Key bindings
-      this.screen.key(['q', 'C-c'], () => process.exit(0));
-
-      // Delay initial render supaya semua box siap
-      process.nextTick(() => this.render());
+      this.ready = true
+      console.log(chalk.gray('[Dashboard] Running in separate process (PID: ' + this.child.pid + ')'))
 
     } catch (err) {
-      console.error(chalk.yellow('[Dashboard.constructor] Blessed not supported, fallback to console-only'));
-
-      // Fallback safe objects supaya tidak crash
-      this.screen = null;
-      this.grid = null;
-      this.logBox = { log: console.log }; // fallback log
-      this.userBox = { setContent: () => {} };
-      this.memoryBox = { setContent: () => {} };
-      this.networkBox = { setContent: () => {} };
+      console.error(chalk.yellow('[Dashboard] Could not spawn dashboard process:'), err.message)
+      this.child = null
+      this.ready = false
     }
   }
 
+  // Called by Kernel on its interval — collects state and sends to child
   render() {
+    if (!this.child || !this.ready) return
+
     try {
-      const user = this.kernel && this.kernel.identity ? this.kernel.identity.getName() : 'Unknown';
-      const memKeys = this.kernel && this.kernel.memory ? Object.keys(this.kernel.memory.data).join(', ') : 'empty';
-      const networkStatus = this.kernel && this.kernel.networkWatcher && this.kernel.networkWatcher.online
-        ? chalk.green('ONLINE')
-        : chalk.red('OFFLINE');
+      const kernel = this.kernel
 
-      if (this.userBox) this.userBox.setContent(`Name: ${user}\nCommands: ${this.kernel ? this.kernel.commandHistory.length : 0}`);
-      if (this.memoryBox) this.memoryBox.setContent(`Keys: ${memKeys}`);
-      if (this.networkBox) this.networkBox.setContent(`Status: ${networkStatus}`);
-
-      if (this.screen) this.screen.render();
-    } catch (err) {
-      console.error(chalk.red('[Dashboard.render] Error:'), err);
-    }
-  }
-
-  log(message) {
-    try {
-      if (!this.logBox) {
-        // fallback ke console supaya tidak crash
-        console.log(chalk.yellow('[Dashboard.log] logBox not initialized:'), message);
-        return;
+      const data = {
+        user: kernel?.identity?.getName?.() || 'Unknown',
+        commandsCount: kernel?.commandHistory?.length || 0,
+        memKeys: kernel?.memory
+          ? Object.keys(kernel.memory.data || {}).join('\n') || 'empty'
+          : 'empty',
+        networkOnline: kernel?.networkWatcher?.online || false
       }
 
-      // Convert non-string messages to string
-      const msgStr = typeof message === 'string' ? message : JSON.stringify(message, null, 2);
-      this.logBox.log(msgStr);
-
-      if (this.screen) this.screen.render();
+      this.child.send({ type: 'state', data })
     } catch (err) {
-      console.error(chalk.red('[Dashboard.log] Error:'), err);
+      // IPC failed — child probably died
+      console.error(chalk.yellow('[Dashboard.render]'), err.message)
+      this.ready = false
     }
   }
 
-  // Optional helper: force refresh semua box
+  // Send a log message to the dashboard log panel
+  log(message) {
+    if (!this.child || !this.ready) {
+      console.log(chalk.gray('[log]'), message)
+      return
+    }
+
+    try {
+      this.child.send({ type: 'log', data: message })
+    } catch (err) {
+      console.log(chalk.gray('[log]'), message)
+    }
+  }
+
   refreshAll() {
-    this.render();
+    this.render()
+  }
+
+  destroy() {
+    if (this.child) {
+      try {
+        this.child.kill()
+      } catch (_) {}
+      this.child = null
+      this.ready = false
+    }
   }
 }
 
-module.exports = Dashboard;
+export default Dashboard

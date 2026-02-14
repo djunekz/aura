@@ -1,4 +1,4 @@
-const chalk = require('chalk');
+import chalk from 'chalk';
 
 class Scheduler {
   constructor(kernel) {
@@ -8,7 +8,7 @@ class Scheduler {
 
   addTask(name, intervalSeconds, action) {
     if (!this.kernel || !this.kernel.dashboard) {
-      console.error(chalk.red(`[Scheduler] Cannot schedule task "${name}" because dashboard is not ready.`));
+      console.error(chalk.red(`[Scheduler] Cannot schedule task "${name}"`));
       return;
     }
 
@@ -32,9 +32,9 @@ class Scheduler {
     if (this.kernel && this.kernel.dashboard) {
       this.kernel.dashboard.log("⏱ [Scheduler] All tasks stopped.");
     } else {
-      console.log(chalk.yellow("[Scheduler] All tasks stopped, but dashboard not ready."));
+      console.log(chalk.yellow("[Scheduler] All tasks stopped."));
     }
   }
 }
 
-module.exports = Scheduler;
+export default Scheduler;

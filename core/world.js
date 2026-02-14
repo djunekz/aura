@@ -1,12 +1,15 @@
-const fs = require('fs');
-const path = require('path');
-const chalk = require('chalk');
+import { fileURLToPath } from 'url';
+import path from 'path';
+import fs from 'fs';
+import chalk from 'chalk';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class World {
   constructor() {
     this.filePath = path.join(__dirname, 'world.json');
     this.state = {};
-
     this.loadWorld();
   }
 
@@ -23,7 +26,6 @@ class World {
     fs.writeFileSync(this.filePath, JSON.stringify(this.state, null, 2));
   }
 
-  // Add/update user state
   updateUser(userId, data) {
     if(!this.state.users[userId]) this.state.users[userId] = {};
     Object.assign(this.state.users[userId], data);
@@ -34,7 +36,6 @@ class World {
     return this.state.users[userId] || {};
   }
 
-  // Add/update project state
   updateProject(projectName, data) {
     if(!this.state.projects[projectName]) this.state.projects[projectName] = {};
     Object.assign(this.state.projects[projectName], data);
@@ -46,4 +47,4 @@ class World {
   }
 }
 
-module.exports = World;
+export default World;

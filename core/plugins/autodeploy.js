@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   name: "AutoDeploy",
   init: function(kernel){
     console.log("🚀 AutoDeploy plugin initialized!");

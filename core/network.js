@@ -1,5 +1,5 @@
-const isOnline = require('is-online');
-const chalk = require('chalk');
+import isOnline from 'is-online';
+import chalk from 'chalk';
 
 class NetworkWatcher {
   constructor(kernel) {
@@ -25,13 +25,17 @@ class NetworkWatcher {
       this.online = status;
       if (status) {
         console.log(chalk.green('✅ Internet is ONLINE'));
-        this.kernel.suggestCommand('online');
+        if(this.kernel && this.kernel.suggestCommand) {
+          this.kernel.suggestCommand('online');
+        }
       } else {
         console.log(chalk.red('❌ Internet is OFFLINE'));
-        this.kernel.suggestCommand('offline');
+        if(this.kernel && this.kernel.suggestCommand) {
+          this.kernel.suggestCommand('offline');
+        }
       }
     }
   }
 }
 
-module.exports = NetworkWatcher;
+export default NetworkWatcher;

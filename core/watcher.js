@@ -1,9 +1,9 @@
-const chokidar = require('chokidar');
-const chalk = require('chalk');
+import chokidar from 'chokidar';
+import chalk from 'chalk';
 
 class Watcher {
   constructor(kernel) {
-    this.kernel = kernel; // Reference to main kernel
+    this.kernel = kernel;
     this.watchers = [];
   }
 
@@ -16,22 +16,23 @@ class Watcher {
     });
 
     watcher
-      .on('add', path => this.handleEvent('add', path))
-      .on('change', path => this.handleEvent('change', path))
-      .on('unlink', path => this.handleEvent('unlink', path));
+      .on('add', filepath => this.handleEvent('add', filepath))
+      .on('change', filepath => this.handleEvent('change', filepath))
+      .on('unlink', filepath => this.handleEvent('unlink', filepath));
 
     this.watchers.push(watcher);
   }
 
-  handleEvent(event, path) {
-    console.log(chalk.yellow(`[EVENT] ${event.toUpperCase()}: ${path}`));
-    
-    // Trigger actions
-    if (event === 'change' && path.endsWith('.js')) {
-      console.log(chalk.green('💡 JS file changed! Suggest running test or lint...'));
-      this.kernel.suggestCommand('run-test');
+  handleEvent(event, filepath) {
+    console.log(chalk.yellow(`[EVENT] ${event.toUpperCase()}: ${filepath}`));
+
+    if (event === 'change' && filepath.endsWith('.js')) {
+      console.log(chalk.green('💡 JS file changed!'));
+      if(this.kernel && this.kernel.suggestCommand) {
+        this.kernel.suggestCommand('run-test');
+      }
     }
   }
 }
 
-module.exports = Watcher;
+export default Watcher;
