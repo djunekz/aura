@@ -1,41 +1,37 @@
 # AURA
 
 **Adaptive Unified Runtime Assistant (AURA)** – Mini OS-Layer AI untuk Termux.  
-Membantu otomatisasi workflow, backup, deploy, auto Git push, scheduler, plugin, dan dashboard real-time.
+Otomatisasi workflow, backup, deploy, git, scheduler, plugin, dan dashboard real-time.
 
 ---
 
 ## 1. Fitur Utama
 
-1. **Full Automation Engine**
-   - Backup, deploy, push, build otomatis sesuai event.
-2. **Scheduler Task Engine**
-   - Jalankan task periodik sesuai jadwal user.
-3. **Adaptive AI Learning Engine**
-   - Belajar pola workflow user & prioritas project.
-4. **Plugin Marketplace Online**
-   - Install/update plugin dari repository resmi.
-5. **Dashboard Visual & Logs**
-   - Monitoring file, memory, network secara real-time.
-6. **Event-driven Automation**
-   - Trigger task saat file berubah atau network online.
-7. **Auto Git Push**
-   - Commit & push otomatis ke repositori target.
+1. **Full Automation Engine** — Backup, deploy, push, build otomatis.
+2. **Scheduler Task Engine** — Jalankan task periodik sesuai jadwal.
+3. **Git Manager** — `git status`, `add`, `commit`, `push`, `pull`, `autopush` langsung dari CLI.
+4. **Script Runner** — Jalankan npm/python/make script dari dalam aura.
+5. **Adaptive AI Learning Engine** — Belajar pola workflow & beri saran.
+6. **Plugin Marketplace** — Install/update plugin dari repository resmi.
+7. **Persistent Logs** — Riwayat aktivitas tersimpan di `core/aura.log`.
+8. **Config File** — Auto-load settings dari `aura.config.json`.
+9. **Command History** — Riwayat command tersimpan antar sesi.
+10. **Event-driven Automation** — Trigger saat file berubah atau network online.
 
 ---
 
 ## 2. Instalasi
 
-### 2.1 Via GitHub
+### Via GitHub
 ```bash
 git clone https://github.com/djunekz/aura
 cd aura
 npm install
 ```
 
-### 2.2 Via NPM
+### Via NPM
 ```bash
-npm install aura-terminal
+npm install -g aura-terminal
 ```
 
 ---
@@ -44,75 +40,165 @@ npm install aura-terminal
 ```bash
 aura
 ```
-> CLI interaktif akan muncul dengan dashboard, logs, dan AI suggestion.
 
 ---
 
-## 4. Perintah Penting
+## 4. Perintah Lengkap
 
-| No | Perintah | Fungsi |
-|----|----------|--------|
-| 1 | `status` | Tampilkan status kernel & project |
-| 2 | `context` | Tampilkan context project |
-| 3 | `memory` | Tampilkan memory AI |
-| 4 | `identity` | Tampilkan identity user |
-| 5 | `watch on/off` | Hidupkan/matikan watcher file |
-| 6 | `network on/off` | Hidupkan/matikan network watcher |
-| 7 | `plugin install <path>` | Install plugin lokal |
-| 8 | `plugin install-url <url>` | Install plugin dari URL |
-| 9 | `plugin update <name>` | Update plugin |
-| 10 | `marketplace list` | Lihat plugin marketplace tersedia |
-| 11 | `marketplace install <name>` | Install plugin dari marketplace |
-| 12 | `scheduler add <name> <interval>` | Tambahkan task periodik |
-| 13 | `scheduler stop` | Hentikan semua task scheduler |
+### System
+| Perintah | Fungsi |
+|----------|--------|
+| `status` | Status kernel & project |
+| `context` | Tipe project terdeteksi |
+| `identity` | Tampilkan identitas user |
+| `identity set <nama>` | Ubah nama user |
+| `help` | Tampilkan semua perintah |
+| `exit` | Keluar dari AURA |
+
+### Memory
+| Perintah | Fungsi |
+|----------|--------|
+| `memory` | Lihat semua data memory |
+| `memory set <key> <val>` | Simpan data |
+| `memory get <key>` | Ambil data |
+| `memory delete <key>` | Hapus key |
+| `memory clear` | Kosongkan semua |
+
+### Git *(baru)*
+| Perintah | Fungsi |
+|----------|--------|
+| `git status` | Lihat status repo |
+| `git log [n]` | Lihat n commit terakhir (default 5) |
+| `git add [path]` | Stage file (default `.`) |
+| `git commit [pesan]` | Commit dengan pesan |
+| `git push [remote] [branch]` | Push ke remote |
+| `git pull [remote] [branch]` | Pull dari remote |
+| `git autopush [pesan]` | Add + commit + push sekaligus |
+
+### Script Runner *(baru)*
+| Perintah | Fungsi |
+|----------|--------|
+| `run` | Tampilkan script tersedia |
+| `run <perintah>` | Jalankan perintah (npm, python, make, dll) |
+| `kill` | Hentikan proses yang sedang berjalan |
+
+### Watcher & Network
+| Perintah | Fungsi |
+|----------|--------|
+| `watch on / off` | Aktifkan/matikan file watcher |
+| `network on / off` | Aktifkan/matikan network watcher |
+
+### AI
+| Perintah | Fungsi |
+|----------|--------|
+| `ask <pertanyaan>` | Tanya AI tentang project, error, deploy, dll |
+
+### Plugin
+| Perintah | Fungsi |
+|----------|--------|
+| `plugin list` | Lihat plugin terinstall |
+| `plugin install <path>` | Install plugin lokal |
+| `plugin install-url <url>` | Install plugin dari URL |
+| `plugin update <nama>` | Update plugin |
+| `marketplace list` | Lihat plugin marketplace |
+| `marketplace install <nama>` | Install dari marketplace |
+
+### Scheduler
+| Perintah | Fungsi |
+|----------|--------|
+| `scheduler list` | Lihat task aktif |
+| `scheduler add <nama> <detik>` | Tambah task periodik |
+| `scheduler stop` | Hentikan semua task |
+| `scheduler stop <id\|nama>` | Hentikan task tertentu |
+
+### Logs *(baru)*
+| Perintah | Fungsi |
+|----------|--------|
+| `logs` | Tampilkan 20 log terakhir |
+| `logs <n>` | Tampilkan n log terakhir |
+| `logs clear` | Kosongkan log |
+
+### Config *(baru)*
+| Perintah | Fungsi |
+|----------|--------|
+| `config` | Tampilkan config saat ini |
+| `config init` | Buat `aura.config.json` template |
+| `config set <key> <val>` | Ubah nilai config |
+
+### Lainnya
+| Perintah | Fungsi |
+|----------|--------|
+| `history` | Tampilkan command history (30 terakhir) |
+| `world status` | Lihat data users & projects |
+| `world user <id> <key> <val>` | Update data user |
+| `world project <nama> <key> <val>` | Update data project |
 
 ---
 
-## 5. Plugin Marketplace
+## 5. Config File (`aura.config.json`)
 
-- Semua plugin dapat diakses & diupdate dari marketplace online.
-- Plugin populer: `AutoBackup`, `AutoDeploy`, `SchedulerEnhancer`.
+Buat dengan `config init` lalu edit:
+
+```json
+{
+  "autoWatch": false,
+  "autoScheduler": [
+    { "name": "AutoBackup", "interval": 300 }
+  ],
+  "identity": "Nama Kamu",
+  "theme": "default"
+}
+```
+
+Config ini akan di-load otomatis setiap AURA dijalankan.
 
 ---
 
-## 6. Kontribusi
+## 6. Contoh Workflow
+
+### Auto push setiap 10 menit
+```text
+scheduler add GitPush 600
+```
+> Perlu plugin AutoDeploy untuk action custom
+
+### Git autopush cepat
+```text
+git autopush fix: update konfigurasi
+```
+
+### Jalankan build
+```text
+run npm run build
+```
+
+### Cek error terakhir
+```text
+ask error
+```
+
+---
+
+## 7. Environment Variables
+
+```bash
+export GITHUB_TOKEN=ghp_xxxxyyyyzzz   # untuk AutoDeploy
+```
+
+---
+
+## 8. Kontribusi
 
 1. Buat pull request di GitHub.
 2. Submit plugin ke marketplace.
-3. Selalu test plugin baru di sandbox environment sebelum release.
+3. Selalu test plugin di sandbox sebelum release.
 
 ---
 
-## 7. Lisensi
+## 9. Lisensi
 
 MIT License © 2026 djunekz
 
 ---
 
-## 8. Tips Penggunaan
-
-1. **Environment Variable untuk GitHub PAT** (untuk AutoDeploy otomatis):
-```bash
-export GITHUB_TOKEN=ghp_xxxxyyyyzzz
-```
-
-2. **Menjalankan Scheduler**
-```text
-scheduler add AutoBackup 300    # Backup setiap 5 menit
-scheduler add AutoPush 600      # Auto push setiap 10 menit
-```
-
-3. **Update Core & Plugin**
-```bash
-npm run auto-update
-npm run update-plugins
-```
-
-4. **Dashboard**
-- Refresh otomatis setiap 2 detik.
-- Menampilkan status project, logs, memory, network, dan suggestion.
-
----
-
-**Selamat menggunakan AURA** 🚀
-Terminal Termux Anda sekarang lebih cerdas, adaptif, dan otomatis.
+**Selamat menggunakan AURA**

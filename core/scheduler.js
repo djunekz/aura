@@ -4,35 +4,90 @@ class Scheduler {
   constructor(kernel) {
     this.kernel = kernel;
     this.tasks = [];
+    this._nextId = 1;
   }
 
-  addTask(name, intervalSeconds, action) {
-    if (!this.kernel || !this.kernel.dashboard) {
-      console.error(chalk.red(`[Scheduler] Cannot schedule task "${name}"`));
+  addTask(nameOrDef, intervalSeconds, action) {
+    let name, interval, fn;
+
+    if (typeof intervalSeconds === 'undefined') {
+      const parts = String(nameOrDef).trim().split(/\s+/);
+      name = parts[0];
+      interval = parseInt(parts[1], 10);
+      fn = null;
+    } else {
+      name = nameOrDef;
+      interval = intervalSeconds;
+      fn = action || null;
+    }
+
+    if (!name) {
+      console.log(chalk.red('Usage: scheduler add <nama> <interval_detik>'));
       return;
     }
 
-    const task = setInterval(async () => {
-      try {
-        await action();
-        this.kernel.dashboard.log(`⏱ [Scheduler] Task "${name}" executed.`);
-      } catch (e) {
-        this.kernel.dashboard.log(`❌ [Scheduler] Task "${name}" failed: ${e.message}`);
-      }
-    }, intervalSeconds * 1000);
+    if (!interval || isNaN(interval) || interval <= 0) {
+      console.log(chalk.red(`❌ Interval tidak valid untuk task "${name}". Gunakan angka detik positif.`));
+      return;
+    }
 
-    this.tasks.push({ name, task });
-    this.kernel.dashboard.log(`⏱ [Scheduler] Task "${name}" scheduled every ${intervalSeconds}s`);
+    const id = this._nextId++;
+    const log = (msg) => {
+      if (this.kernel?.dashboard?.log) {
+        this.kernel.dashboard.log(msg);
+      } else {
+        console.log(chalk.gray(msg));
+      }
+    };
+
+    const timer = setInterval(async () => {
+      try {
+        if (typeof fn === 'function') await fn();
+        else log(`⏱ [Scheduler] Task "${name}" tick.`);
+      } catch (e) {
+        log(`❌ [Scheduler] Task "${name}" error: ${e.message}`);
+      }
+    }, interval * 1000);
+
+    this.tasks.push({ id, name, interval, timer });
+    console.log(chalk.green(`✅ Scheduler: "${name}" aktif setiap ${interval}s (ID: ${id})`));
+  }
+
+  stopTask(idOrName) {
+    const target = this.tasks.find(
+      t => String(t.id) === String(idOrName) || t.name === idOrName
+    );
+
+    if (!target) {
+      console.log(chalk.red(`❌ Task "${idOrName}" tidak ditemukan.`));
+      console.log(chalk.gray(`   Task aktif: ${this.tasks.map(t => `${t.id}:${t.name}`).join(', ') || 'tidak ada'}`));
+      return;
+    }
+
+    clearInterval(target.timer);
+    this.tasks = this.tasks.filter(t => t.id !== target.id);
+    console.log(chalk.green(`✅ Task "${target.name}" (ID: ${target.id}) dihentikan.`));
+  }
+
+  listTasks() {
+    if (this.tasks.length === 0) {
+      console.log(chalk.yellow('Tidak ada task scheduler aktif.'));
+      return;
+    }
+    console.log(chalk.blue.bold('\n── Scheduler Tasks ─────────────────────'));
+    this.tasks.forEach(t => {
+      console.log(chalk.green(`  [${t.id}] ${t.name}`) + chalk.gray(` — setiap ${t.interval}s`));
+    });
+    console.log(chalk.blue('────────────────────────────────────────\n'));
   }
 
   stopAll() {
-    this.tasks.forEach(t => clearInterval(t.task));
+    this.tasks.forEach(t => clearInterval(t.timer));
     this.tasks = [];
-
-    if (this.kernel && this.kernel.dashboard) {
-      this.kernel.dashboard.log("⏱ [Scheduler] All tasks stopped.");
+    if (this.kernel?.dashboard?.log) {
+      this.kernel.dashboard.log('⏱ [Scheduler] All tasks stopped.');
     } else {
-      console.log(chalk.yellow("[Scheduler] All tasks stopped."));
+      console.log(chalk.yellow('[Scheduler] All tasks stopped.'));
     }
   }
 }

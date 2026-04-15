@@ -1,0 +1,11 @@
+{
+  "autoWatch": false,
+  "autoScheduler": [
+    {
+      "name": "AutoBackup",
+      "interval": 300
+    }
+  ],
+  "identity": "Your Name",
+  "theme": "default"
+}

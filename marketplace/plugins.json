@@ -1,12 +1,14 @@
 [
   {
     "name": "AutoBackup",
+    "version": "1.0.1",
     "url": "https://raw.githubusercontent.com/djunekz/aura/main/core/plugins/autobackup.js",
-    "description": "Automatically backup modified files every 5 minutes"
+    "description": "Backup otomatis file yang berubah ke folder aura_backups/ dengan timestamp"
   },
   {
     "name": "AutoDeploy",
+    "version": "1.0.1",
     "url": "https://raw.githubusercontent.com/djunekz/aura/main/core/plugins/autodeploy.js",
-    "description": "Suggest or auto-run deployment scripts when network is online"
+    "description": "Saran deploy otomatis ketika file JS berubah dan network online"
   }
 ]
