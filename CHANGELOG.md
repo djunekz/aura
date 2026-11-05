@@ -33,7 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Git commands run through `execFile` with an argument array instead of a shell command string.
 - `plugin install-url` and `marketplace install` accept only `https` URLs that end in `.js`, apply a 10 second timeout and a 1 MB size limit, and warn that plugins run with full system access.
 - `plugin install <path>` accepts only simple `.js` file names.
-- The release workflow now runs the full check, promotes the changelog, publishes to npm with provenance, pushes the commit and tag only after publishing, and creates a GitHub release from the changelog.
+- The release workflow now starts when a `vX.X.X` tag is pushed instead of manually. It verifies the tag against `package.json` and `main`, runs the full check, publishes to npm with provenance (pre-release tags go to the `next` dist-tag) and creates a GitHub release titled `Aura vX.X.X` whose notes come from the matching `[X.X.X]` section of this changelog. Re-running it is safe.
 - `README.md` rewritten in English with badges and the new logo. It no longer lists a real-time dashboard or the unused `GITHUB_TOKEN` variable.
 - Package description translated to English. `homepage`, `bugs` and `CHANGELOG.md` added to `package.json`.
 - Code comments removed from the source.

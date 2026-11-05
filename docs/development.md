@@ -58,23 +58,39 @@ Use [Conventional Commits](https://www.conventionalcommits.org): `feat:`, `fix:`
 | `ci.yml` | Push to `main`, pull requests | Tests on Node 18, 20, 22 and 24, lint, marketplace validation, package dry run, changelog check |
 | `codeql.yml` | Push, pull requests, weekly | Static security analysis |
 | `dependency-review.yml` | Pull requests | Blocks dependency changes with high severity advisories |
-| `release.yml` | Manual | Version bump, npm publish, tag and GitHub release |
+| `release.yml` | Push of a `vX.X.X` tag | Verifies the tag, publishes to npm and creates the GitHub release |
 
 Dependabot opens weekly updates for npm packages and GitHub Actions.
 
 ## Releasing
 
-Prerequisites: the `NPM_TOKEN` repository secret, and permission for the workflow to push to `main`.
+Releases are triggered by pushing a version tag. Prerequisite: the `NPM_TOKEN` repository secret.
 
 1. Make sure `[Unreleased]` in `CHANGELOG.md` describes everything that changed.
-2. Open **Actions**, choose **Release**, pick `patch`, `minor` or `major` and run it on `main`.
+2. On an up-to-date `main`, run one of:
 
-The workflow then:
+```bash
+npm version patch -m "chore(release): %s"
+npm version minor -m "chore(release): %s"
+npm version major -m "chore(release): %s"
+```
 
-1. Runs `npm run check`
-2. Runs `npm version`, which bumps `package.json`, moves `[Unreleased]` into a dated version section with updated compare links, commits and tags
-3. Publishes to npm with provenance
-4. Pushes the commit and tag
-5. Creates a GitHub release whose notes are the new changelog section
+3. Push the commit and the tag:
 
-If the changelog section is empty, `npm version` fails and nothing is published. If branch protection blocks the push to `main`, allow the workflow to bypass it or release manually.
+```bash
+git push origin main --follow-tags
+```
+
+`npm version` bumps `package.json`, moves `[Unreleased]` into a `[x.x.x] - date` section with updated compare links, commits the result and creates the tag `vx.x.x`. It fails if `[Unreleased]` is empty.
+
+Pushing the tag starts the `Release` workflow, which:
+
+1. Checks that the tag matches the `package.json` version and points to a commit on `main`
+2. Runs `npm run check`
+3. Reads the `[x.x.x]` section of `CHANGELOG.md` as the release notes
+4. Publishes to npm with provenance, unless that version is already published
+5. Creates a GitHub release titled `Aura vx.x.x` with those notes, or updates it if it already exists
+
+Tags with a suffix such as `v0.11.0-beta.1` are published to npm under the `next` tag and marked as pre-releases on GitHub.
+
+If a run fails, fix the cause and re-run the workflow from the Actions tab. It is safe to re-run because already published versions and existing releases are detected.

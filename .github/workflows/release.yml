@@ -1,20 +1,13 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      release:
-        description: Release type
-        required: true
-        default: patch
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
 
 concurrency:
-  group: release
+  group: release-${{ github.ref_name }}
   cancel-in-progress: false
 
 permissions:
@@ -23,9 +16,8 @@ permissions:
 
 jobs:
   release:
-    name: Release and publish
+    name: Release ${{ github.ref_name }}
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -39,39 +31,66 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: npm
 
+      - name: Validate tag
+        id: meta
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION="${TAG#v}"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "Tag $TAG does not match the package.json version $PACKAGE_VERSION"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "Tag $TAG does not point to a commit on main"
+            exit 1
+          fi
+          case "$VERSION" in
+            *-*)
+              echo "prerelease=true" >> "$GITHUB_OUTPUT"
+              echo "npm_tag=next" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "prerelease=false" >> "$GITHUB_OUTPUT"
+              echo "npm_tag=latest" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Install dependencies
         run: npm ci
 
       - name: Verify
         run: npm run check
 
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Bump version and promote changelog
+      - name: Extract release notes from CHANGELOG.md
         env:
-          RELEASE_TYPE: ${{ inputs.release }}
-        run: |
-          npm version "$RELEASE_TYPE" -m "chore(release): %s [skip ci]"
-
-      - name: Read version
-        id: version
-        run: echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: node scripts/changelog.js notes "$VERSION" > release-notes.md
 
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --provenance --access public
-
-      - name: Push commit and tag
-        run: git push origin HEAD:main --follow-tags
+          VERSION: ${{ steps.meta.outputs.version }}
+          NPM_TAG: ${{ steps.meta.outputs.npm_tag }}
+        run: |
+          if npm view "aura-terminal@$VERSION" version > /dev/null 2>&1; then
+            echo "aura-terminal@$VERSION is already on npm, skipping publish"
+          else
+            npm publish --provenance --access public --tag "$NPM_TAG"
+          fi
 
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.version.outputs.value }}
+          TAG: ${{ github.ref_name }}
+          PRERELEASE: ${{ steps.meta.outputs.prerelease }}
         run: |
-          node scripts/changelog.js notes "$VERSION" > release-notes.md
-          gh release create "v$VERSION" --title "v$VERSION" --notes-file release-notes.md --verify-tag
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release edit "$TAG" --title "Aura $TAG" --notes-file release-notes.md
+          elif [ "$PRERELEASE" = "true" ]; then
+            gh release create "$TAG" --title "Aura $TAG" --notes-file release-notes.md --verify-tag --prerelease
+          else
+            gh release create "$TAG" --title "Aura $TAG" --notes-file release-notes.md --verify-tag
+          fi
