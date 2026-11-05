@@ -1,4 +1,4 @@
-import { HOME, tempDir } from './helpers.js'
+import { HOME, tempDir, capture } from './helpers.js'
 import { describe, it, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'fs'
@@ -37,7 +37,7 @@ describe('PluginManager', () => {
 
   it('loads the bundled plugins', async () => {
     const manager = new PluginManager(fakeKernel())
-    await manager.loadPlugins()
+    await capture(() => manager.loadPlugins())
     const names = manager.plugins.map(p => p.name).sort()
     assert.deepEqual(names, ['AutoBackup', 'AutoDeploy'])
   })
@@ -49,14 +49,14 @@ describe('PluginManager', () => {
       "export default { name: 'AutoBackup', version: '9.9.9', init() {} }\n"
     )
     const manager = new PluginManager(fakeKernel())
-    await manager.loadPlugins()
+    await capture(() => manager.loadPlugins())
     assert.equal(manager.plugins.length, 2)
     assert.equal(manager.plugins.find(p => p.name === 'AutoBackup').version, '9.9.9')
   })
 
   it('marks the user plugin folder as ES modules so every Node version can load it', async () => {
     const manager = new PluginManager(fakeKernel())
-    await manager.loadPlugins()
+    await capture(() => manager.loadPlugins())
     const manifest = JSON.parse(fs.readFileSync(path.join(userDir, 'package.json'), 'utf-8'))
     assert.equal(manifest.type, 'module')
   })
@@ -68,22 +68,24 @@ describe('PluginManager', () => {
     const kernel = fakeKernel()
     kernel.logger.warn = msg => warnings.push(msg)
     const manager = new PluginManager(kernel)
-    await manager.loadPlugins()
+    await capture(() => manager.loadPlugins())
     assert.equal(manager.plugins.length, 2)
     assert.ok(warnings.some(w => w.includes('broken.js')))
   })
 
-  it('installs a local plugin into the user directory', () => {
+  it('installs a local plugin into the user directory', async () => {
     const source = path.join(tempDir(), 'hello.js')
     fs.writeFileSync(source, "export default { name: 'Hello', init() {} }\n")
-    new PluginManager(fakeKernel()).installPlugin(source)
+    const manager = new PluginManager(fakeKernel())
+    await capture(() => manager.installPlugin(source))
     assert.ok(fs.existsSync(path.join(userDir, 'hello.js')))
   })
 
-  it('refuses plugin files with unsafe names', () => {
+  it('refuses plugin files with unsafe names', async () => {
     const source = path.join(tempDir(), 'bad name.js')
     fs.writeFileSync(source, 'export default {}\n')
-    new PluginManager(fakeKernel()).installPlugin(source)
+    const manager = new PluginManager(fakeKernel())
+    await capture(() => manager.installPlugin(source))
     assert.equal(fs.existsSync(path.join(userDir, 'bad name.js')), false)
   })
 })

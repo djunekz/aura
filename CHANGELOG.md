@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Plugin tests no longer fail intermittently on Node 20. The bundled plugins print a startup message, and that output could corrupt the test runner's result stream (`Unable to deserialize cloned data`). The tests now capture console output while loading and installing plugins.
+
 ## [0.11.0] - 2026-11-05
 
 ### Added
