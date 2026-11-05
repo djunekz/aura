@@ -1,6 +1,6 @@
 {
   "name": "aura-terminal",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Adaptive Unified Runtime Assistant (mini OS-layer) — CLI automation for Termux",
   "author": "djunekz",
   "license": "MIT",

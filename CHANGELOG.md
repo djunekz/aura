@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-05
+
 ### Added
 
 - `aura --version` and `aura --help` command line options.
@@ -66,4 +68,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/changelog.js` no longer builds regular expressions from command line input. It parses lines with plain string comparison and validates versions as semantic versions, which resolves the CodeQL `js/regex-injection` and `js/incomplete-sanitization` alerts.
 - Development history and memory data are no longer shipped inside the npm package.
 
-[Unreleased]: https://github.com/djunekz/aura/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/djunekz/aura/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/djunekz/aura/compare/v0.10.0...v0.11.0
