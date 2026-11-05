@@ -50,11 +50,20 @@ describe('changelog tooling', () => {
     assert.doesNotMatch(notes, /compare/)
   })
 
+  it('rejects versions that are not semantic versions', () => {
+    assert.throws(() => promote(sample, '1.0.0)(.*', '2026-12-01'), /tidak valid/)
+    assert.throws(() => notesFor(sample, '.*'), /tidak valid/)
+  })
+
+  it('keeps the trailing newline of the file', () => {
+    assert.ok(promote(sample, '0.11.0', '2026-12-01').endsWith('\n'))
+  })
+
   it('throws for unknown versions', () => {
     assert.throws(() => notesFor(sample, '9.9.9'), /tidak ditemukan/)
   })
 
   it('reads the Unreleased body', () => {
-    assert.match(sectionBody(sample, /^## \[Unreleased\][ \t]*$/m), /New thing/)
+    assert.match(sectionBody(sample, 'Unreleased'), /New thing/)
   })
 })

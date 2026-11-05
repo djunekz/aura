@@ -63,6 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Added an `overrides` entry that pins `minimatch` to a patched release inside the ESLint toolchain, so Dependabot security updates no longer fail on the `eslint` downgrade path.
 - Prevented shell injection through `git commit`, `git add` and the other git commands.
 - Prevented prototype pollution through user-controlled keys.
+- `scripts/changelog.js` no longer builds regular expressions from command line input. It parses lines with plain string comparison and validates versions as semantic versions, which resolves the CodeQL `js/regex-injection` and `js/incomplete-sanitization` alerts.
 - Development history and memory data are no longer shipped inside the npm package.
 
 [Unreleased]: https://github.com/djunekz/aura/compare/v0.10.0...HEAD

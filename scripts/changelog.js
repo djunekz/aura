@@ -2,55 +2,92 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 
-const UNRELEASED_HEADING = /^## \[Unreleased\][ \t]*$/m
-const NEXT_HEADING = /^## \[/m
-const UNRELEASED_LINK = /^\[Unreleased\]: (.+)\/compare\/(v[\w.-]+)\.\.\.HEAD[ \t]*$/m
+const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/
+const UNRELEASED = '## [Unreleased]'
+const LINK_SUFFIX = '...HEAD'
 
-export function sectionBody(text, heading) {
-  const start = text.search(heading)
-  if (start === -1) return null
-  const afterHeading = text.indexOf('\n', start) + 1
-  const rest = text.slice(afterHeading)
-  const next = rest.search(NEXT_HEADING)
-  const body = next === -1 ? rest : rest.slice(0, next)
-  const linkStart = body.search(/^\[[^\]]+\]: https?:\/\//m)
-  return (linkStart === -1 ? body : body.slice(0, linkStart)).trim()
+function assertVersion(version) {
+  if (typeof version !== 'string' || !SEMVER.test(version)) {
+    throw new Error(`Versi tidak valid: ${String(version)}`)
+  }
+  return version
+}
+
+function isSectionStart(line) {
+  return line.startsWith('## [')
+}
+
+function isLinkReference(line) {
+  return line.startsWith('[') && line.includes(']: http')
+}
+
+function findHeading(lines, matches) {
+  return lines.findIndex(line => matches(line.trimEnd()))
+}
+
+function bodyAfter(lines, headingIndex) {
+  const body = []
+  for (let i = headingIndex + 1; i < lines.length; i++) {
+    if (isSectionStart(lines[i]) || isLinkReference(lines[i])) break
+    body.push(lines[i])
+  }
+  return body.join('\n').trim()
+}
+
+export function sectionBody(text, label) {
+  const lines = text.split('\n')
+  const heading = label === 'Unreleased' ? UNRELEASED : `## [${label}]`
+  const index = findHeading(lines, line =>
+    label === 'Unreleased' ? line === heading : line.startsWith(heading)
+  )
+  return index === -1 ? null : bodyAfter(lines, index)
 }
 
 export function promote(text, version, date) {
-  if (!UNRELEASED_HEADING.test(text)) {
+  assertVersion(version)
+  const lines = text.split('\n')
+
+  const unreleasedIndex = findHeading(lines, line => line === UNRELEASED)
+  if (unreleasedIndex === -1) {
     throw new Error('Section "## [Unreleased]" tidak ditemukan di CHANGELOG.md')
   }
 
-  const body = sectionBody(text, UNRELEASED_HEADING)
-  if (!body) {
+  if (!bodyAfter(lines, unreleasedIndex)) {
     throw new Error('Section [Unreleased] kosong. Tulis catatan perubahan sebelum rilis.')
   }
 
-  if (new RegExp(`^## \\[${version.replace(/\./g, '\\.')}\\]`, 'm').test(text)) {
+  const versionHeading = `## [${version}]`
+  if (lines.some(line => line.startsWith(versionHeading))) {
     throw new Error(`Versi ${version} sudah ada di CHANGELOG.md`)
   }
 
-  let result = text.replace(
-    UNRELEASED_HEADING,
-    `## [Unreleased]\n\n## [${version}] - ${date}`
-  )
+  lines.splice(unreleasedIndex + 1, 0, '', `${versionHeading} - ${date}`)
 
-  const link = result.match(UNRELEASED_LINK)
-  if (link) {
-    const [line, base, previous] = link
-    result = result.replace(
-      line,
-      `[Unreleased]: ${base}/compare/v${version}...HEAD\n[${version}]: ${base}/compare/${previous}...v${version}`
-    )
+  const linkIndex = lines.findIndex(line => line.startsWith('[Unreleased]: '))
+  if (linkIndex !== -1) {
+    const line = lines[linkIndex].trimEnd()
+    const marker = '/compare/'
+    const markerAt = line.indexOf(marker)
+    if (markerAt !== -1 && line.endsWith(LINK_SUFFIX)) {
+      const base = line.slice('[Unreleased]: '.length, markerAt)
+      const previous = line.slice(markerAt + marker.length, line.length - LINK_SUFFIX.length)
+      if (previous.startsWith('v')) {
+        lines.splice(
+          linkIndex,
+          1,
+          `[Unreleased]: ${base}/compare/v${version}${LINK_SUFFIX}`,
+          `[${version}]: ${base}/compare/${previous}...v${version}`
+        )
+      }
+    }
   }
 
-  return result
+  return lines.join('\n')
 }
 
 export function notesFor(text, version) {
-  const heading = new RegExp(`^## \\[${version.replace(/\./g, '\\.')}\\].*$`, 'm')
-  const body = sectionBody(text, heading)
+  assertVersion(version)
+  const body = sectionBody(text, version)
   if (!body) throw new Error(`Versi ${version} tidak ditemukan di CHANGELOG.md`)
   return body
 }
