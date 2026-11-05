@@ -69,9 +69,11 @@ jobs:
           VERSION: ${{ steps.meta.outputs.version }}
         run: node scripts/changelog.js notes "$VERSION" > release-notes.md
 
+      - name: Update npm for trusted publishing
+        run: npm install -g npm@latest
+
       - name: Publish to npm
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           VERSION: ${{ steps.meta.outputs.version }}
           NPM_TAG: ${{ steps.meta.outputs.npm_tag }}
         run: |

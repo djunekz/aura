@@ -64,7 +64,9 @@ Dependabot opens weekly updates for npm packages and GitHub Actions.
 
 ## Releasing
 
-Releases are triggered by pushing a version tag. Prerequisite: the `NPM_TOKEN` repository secret.
+Releases are triggered by pushing a version tag. Publishing uses npm trusted publishing (OIDC), so no npm token is stored in the repository.
+
+One-time setup on npmjs.com: open the `aura-terminal` package, go to **Settings**, then **Trusted Publisher**, choose **GitHub Actions** and enter owner `djunekz`, repository `aura` and workflow filename `release.yml`. Leave the environment empty.
 
 1. Make sure `[Unreleased]` in `CHANGELOG.md` describes everything that changed.
 2. On an up-to-date `main`, run one of:
