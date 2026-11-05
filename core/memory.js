@@ -1,14 +1,11 @@
-import { fileURLToPath } from 'url'
-import path from 'path'
 import fs from 'fs'
 import chalk from 'chalk'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+import { dataPath } from './paths.js'
+import { assertSafeKey } from './safe.js'
 
 class Memory {
   constructor() {
-    this.filePath = path.join(__dirname, 'memory.json')
+    this.filePath = dataPath('memory.json')
     this.data = {}
     this.loadMemory()
   }
@@ -28,6 +25,7 @@ class Memory {
   }
 
   set(key, value) {
+    assertSafeKey(key)
     this.data[key] = value
     this.saveMemory()
   }

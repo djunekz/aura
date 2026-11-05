@@ -1,9 +1,4 @@
 import chalk from 'chalk'
-import fs from 'fs'
-import path from 'path'
-
-// ── Knowledge base lokal ───────────────────────────────────────────────────
-// Pola pertanyaan → handler. Tidak butuh API, semua analisis dari state kernel.
 
 const ERROR_PATTERNS = [
   { pattern: /cannot find module/i,       fix: 'Jalankan: npm install' },
@@ -32,19 +27,17 @@ const COMMAND_SUGGESTIONS = {
 class AIEngine {
   constructor(kernel) {
     this.kernel = kernel
-    this.usageStats = {}      // command → count
-    this.fileStats = {}       // file → count
-    this.errorLog = []        // { time, message, fix }
+    this.usageStats = {}
+    this.fileStats = {}
+    this.errorLog = []
     this.sessionStart = Date.now()
     this._suggestionInterval = null
 
-    // Auto-saran setiap 5 menit
     this._suggestionInterval = setInterval(() => {
       this._autoSuggest()
     }, 5 * 60 * 1000)
+    this._suggestionInterval.unref?.()
   }
-
-  // ── Tracking ───────────────────────────────────────────────────────────
 
   trackCommand(command) {
     if (!this.usageStats[command]) this.usageStats[command] = 0
@@ -68,8 +61,6 @@ class AIEngine {
     return entry.fix
   }
 
-  // ── Main: jawab pertanyaan bebas ───────────────────────────────────────
-
   async answer(question) {
     const q = question.toLowerCase().trim()
     const kernel = this.kernel
@@ -77,7 +68,6 @@ class AIEngine {
     console.log(chalk.cyan(`\n🤖 AURA AI menganalisis: "${question}"`))
     console.log(chalk.gray('─'.repeat(42)))
 
-    // ── Error detection ──────────────────────────────────────────────────
     if (q.includes('error') || q.includes('gagal') || q.includes('failed')) {
       const lastErrors = this.errorLog.slice(-3)
       if (lastErrors.length > 0) {
@@ -87,14 +77,12 @@ class AIEngine {
           console.log(chalk.green(`  💡 Solusi: ${e.fix}\n`))
         })
       } else {
-        // Coba deteksi dari pesan pertanyaan langsung
         const fix = this.trackError(question)
         console.log(chalk.green(`💡 Kemungkinan solusi: ${fix}`))
       }
       return
     }
 
-    // ── Deploy ───────────────────────────────────────────────────────────
     if (q.includes('deploy') || q.includes('publish') || q.includes('upload')) {
       const online = kernel?.networkWatcher?.online
       console.log(chalk.yellow('🚀 Analisis deploy:'))
@@ -114,7 +102,6 @@ class AIEngine {
       return
     }
 
-    // ── Backup ───────────────────────────────────────────────────────────
     if (q.includes('backup') || q.includes('simpan') || q.includes('save')) {
       console.log(chalk.yellow('💾 Analisis backup:'))
       const hasBackup = kernel?.pluginManager?.plugins?.find(p => p.name === 'AutoBackup')
@@ -132,7 +119,6 @@ class AIEngine {
       return
     }
 
-    // ── Memory ───────────────────────────────────────────────────────────
     if (q.includes('memory') || q.includes('ingat') || q.includes('simpan data')) {
       console.log(chalk.yellow('🧠 Status memory:'))
       if (kernel?.memory) {
@@ -147,7 +133,6 @@ class AIEngine {
       return
     }
 
-    // ── Network ──────────────────────────────────────────────────────────
     if (q.includes('network') || q.includes('internet') || q.includes('online') || q.includes('koneksi')) {
       const online = kernel?.networkWatcher?.online
       console.log(online
@@ -157,7 +142,6 @@ class AIEngine {
       return
     }
 
-    // ── Status project ───────────────────────────────────────────────────
     if (q.includes('project') || q.includes('status') || q.includes('apa') || q.includes('info')) {
       console.log(chalk.yellow('📁 Info project saat ini:'))
       console.log(chalk.white('  Folder  : ') + chalk.cyan(process.cwd()))
@@ -166,7 +150,6 @@ class AIEngine {
       console.log(chalk.white('  Plugins : ') + chalk.cyan(kernel?.pluginManager?.plugins?.length || 0))
       console.log(chalk.white('  Commands: ') + chalk.cyan(kernel?.commandHistory?.length || 0) + chalk.gray(' sejak start'))
 
-      // Top commands
       const topCmds = this._topCommands(3)
       if (topCmds.length > 0) {
         console.log(chalk.white('  Command favorit:'))
@@ -175,7 +158,6 @@ class AIEngine {
       return
     }
 
-    // ── Plugin ───────────────────────────────────────────────────────────
     if (q.includes('plugin')) {
       const plugins = kernel?.pluginManager?.plugins || []
       console.log(chalk.yellow(`🔌 ${plugins.length} plugin aktif:`))
@@ -188,13 +170,11 @@ class AIEngine {
       return
     }
 
-    // ── Saran umum ────────────────────────────────────────────────────────
     console.log(chalk.yellow('💡 Tidak ada analisis spesifik untuk pertanyaan itu.'))
     console.log(chalk.white('\nTopik yang bisa saya analisis:'))
     const topics = ['deploy', 'backup', 'error', 'memory', 'network', 'project', 'plugin']
     topics.forEach(t => console.log(chalk.cyan(`  ask ${t}`)))
 
-    // Saran berdasarkan history
     const topCmds = this._topCommands(2)
     if (topCmds.length > 0) {
       console.log(chalk.gray(`\nBerdasarkan history kamu, coba: ${topCmds.map(c => c.name).join(', ')}`))
@@ -203,27 +183,22 @@ class AIEngine {
     console.log('')
   }
 
-  // ── Auto-suggest (background) ──────────────────────────────────────────
-
   _autoSuggest() {
     const kernel = this.kernel
     const suggestions = []
 
-    // Cek file yang sering diakses tapi belum di-backup
     const topFiles = this._topFiles(3)
     const hasBackup = kernel?.pluginManager?.plugins?.find(p => p.name === 'AutoBackup')
     if (topFiles.length > 0 && !hasBackup) {
       suggestions.push(`💾 File aktif terdeteksi (${topFiles[0]?.name}). Pertimbangkan aktifkan AutoBackup.`)
     }
 
-    // Cek network tapi AutoDeploy belum aktif
     const online = kernel?.networkWatcher?.online
     const hasAutoDeploy = kernel?.pluginManager?.plugins?.find(p => p.name === 'AutoDeploy')
     if (online && !hasAutoDeploy) {
       suggestions.push('🚀 Network online. AutoDeploy belum aktif — ketik: marketplace install AutoDeploy')
     }
 
-    // Cek memory kosong padahal sudah banyak command
     const cmdCount = kernel?.commandHistory?.length || 0
     const memKeys = Object.keys(kernel?.memory?.data || {}).length
     if (cmdCount > 20 && memKeys === 0) {
@@ -236,8 +211,6 @@ class AIEngine {
       console.log('')
     }
   }
-
-  // ── Helpers ───────────────────────────────────────────────────────────
 
   _topCommands(n = 3) {
     return Object.entries(this.usageStats)

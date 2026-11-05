@@ -1,57 +1,77 @@
-name: Release & Publish to NPM
+name: Release
 
 on:
   workflow_dispatch:
     inputs:
       release:
-        description: "Release type"
+        description: Release type
         required: true
-        default: "patch"
+        default: patch
         type: choice
         options:
           - patch
           - minor
           - major
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+
 jobs:
   release:
+    name: Release and publish
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-      packages: write
-
+    if: github.ref == 'refs/heads/main'
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
-          registry-url: https://registry.npmjs.org/
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
 
       - name: Install dependencies
-        run: npm ci || npm install
+        run: npm ci
+
+      - name: Verify
+        run: npm run check
 
       - name: Configure git
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Bump version
+      - name: Bump version and promote changelog
+        env:
+          RELEASE_TYPE: ${{ inputs.release }}
         run: |
-          npm version ${{ github.event.inputs.release }} \
-            -m "chore(release): %s [skip ci]"
+          npm version "$RELEASE_TYPE" -m "chore(release): %s [skip ci]"
 
-      - name: Push changes & tags
-        run: |
-          git push origin main --follow-tags
+      - name: Read version
+        id: version
+        run: echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
-      - name: Publish to NPM
+      - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
+
+      - name: Push commit and tag
+        run: git push origin HEAD:main --follow-tags
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.value }}
         run: |
-          npm publish --access public
+          node scripts/changelog.js notes "$VERSION" > release-notes.md
+          gh release create "v$VERSION" --title "v$VERSION" --notes-file release-notes.md --verify-tag

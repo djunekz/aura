@@ -1,10 +1,6 @@
-import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
 import chalk from 'chalk';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const PROJECT_SIGNATURES = [
   { file: 'package.json',     type: 'Node.js / JavaScript' },

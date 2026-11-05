@@ -1,0 +1,63 @@
+name: Marketplace plugin submission
+description: Propose a plugin for the AURA marketplace
+title: "[Plugin]: "
+labels: [plugin, marketplace]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Plugins run with full access to the user's system. Submissions are reviewed manually. Read the [plugin guide](https://github.com/djunekz/aura/blob/main/docs/plugins.md) before submitting.
+  - type: input
+    id: name
+    attributes:
+      label: Plugin name
+      description: Must match the `name` exported by the plugin and be unique in the marketplace.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Raw https URL of the plugin file
+      description: Must be a direct https link to a single `.js` file.
+      placeholder: https://raw.githubusercontent.com/you/aura-plugin/main/plugin.js
+    validations:
+      required: true
+  - type: input
+    id: repository
+    attributes:
+      label: Source repository
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What does it do?
+    validations:
+      required: true
+  - type: textarea
+    id: access
+    attributes:
+      label: System access
+      description: List the files, network hosts, processes and environment variables the plugin touches.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: The plugin is a single, readable, non-obfuscated file
+          required: true
+        - label: I tested it in a throwaway directory with AURA_HOME pointing to a temporary folder
+          required: true
+        - label: It has no hidden network calls or telemetry
+          required: true
+        - label: I am the author or have permission to submit it
+          required: true

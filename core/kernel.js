@@ -1,14 +1,7 @@
-import { fileURLToPath } from 'url'
-import { createRequire } from 'module'
-import path from 'path'
 import fs from 'fs'
 import readline from 'readline'
 import chalk from 'chalk'
 import fuzzy from 'fuzzy'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const require = createRequire(import.meta.url)
 
 import Context from './context.js'
 import Memory from './memory.js'
@@ -23,6 +16,7 @@ import GitManager from './git.js'
 import Runner from './runner.js'
 import Logger from './logger.js'
 import Config from './config.js'
+import { dataPath } from './paths.js'
 
 class Kernel {
   constructor() {
@@ -41,7 +35,7 @@ class Kernel {
     this.runner = new Runner(this)
 
     this.commandHistory = []
-    this._historyFile = path.join(__dirname, 'history.json')
+    this._historyFile = dataPath('history.json')
     this._rl = null
 
     this._loadHistory()
@@ -121,6 +115,7 @@ class Kernel {
 
       this.commandHistory.push(input)
       this._saveHistory()
+      this.logger.cmd(input)
       if (this.ai) this.ai.trackCommand(input)
 
       try {
@@ -198,7 +193,7 @@ class Kernel {
 
     if (cmd.startsWith('plugin update ')) {
       const pluginName = input.slice(14).trim()
-      if (this.pluginManager) this.pluginManager.updatePlugin(pluginName)
+      if (this.pluginManager) await this.pluginManager.updatePlugin(pluginName)
       return
     }
 

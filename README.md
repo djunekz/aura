@@ -1,204 +1,166 @@
-# AURA
+<p align="center">
+  <img src="assets/logo.svg" alt="AURA interactive shell showing the main command menu" width="760">
+</p>
 
-**Adaptive Unified Runtime Assistant (AURA)** – Mini OS-Layer AI untuk Termux.  
-Otomatisasi workflow, backup, deploy, git, scheduler, plugin, dan dashboard real-time.
+<h1 align="center">AURA</h1>
+
+<p align="center">
+  <strong>Adaptive Unified Runtime Assistant</strong><br>
+  A mini OS-layer for your terminal, built for Termux.<br>
+  Git, scripts, schedules, file watching and plugins from a single shell.
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/aura-terminal"><img src="https://img.shields.io/npm/v/aura-terminal?logo=npm&color=cb3837" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/aura-terminal"><img src="https://img.shields.io/npm/dm/aura-terminal?logo=npm&color=cb3837" alt="npm downloads"></a>
+  <a href="https://github.com/djunekz/aura/tags"><img src="https://img.shields.io/github/v/tag/djunekz/aura?sort=semver&label=tag&logo=github" alt="latest tag"></a>
+  <a href="https://github.com/djunekz/aura/actions/workflows/ci.yml"><img src="https://github.com/djunekz/aura/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+  <a href="https://github.com/djunekz/aura/actions/workflows/codeql.yml"><img src="https://github.com/djunekz/aura/actions/workflows/codeql.yml/badge.svg" alt="CodeQL status"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/djunekz/aura?color=blue" alt="MIT license"></a>
+</p>
+
+<p align="center">
+  <a href="https://nodejs.org"><img src="https://img.shields.io/node/v/aura-terminal?logo=nodedotjs&logoColor=white" alt="Node.js version"></a>
+  <img src="https://img.shields.io/badge/made%20for-Termux-1f6feb?logo=android&logoColor=white" alt="Made for Termux">
+  <a href="https://github.com/djunekz/aura/stargazers"><img src="https://img.shields.io/github/stars/djunekz/aura?style=flat&logo=github" alt="GitHub stars"></a>
+  <a href="https://github.com/djunekz/aura/issues"><img src="https://img.shields.io/github/issues/djunekz/aura" alt="Open issues"></a>
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs welcome"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-Keep%20a%20Changelog-e05735" alt="Keep a Changelog"></a>
+  <a href="https://www.conventionalcommits.org"><img src="https://img.shields.io/badge/commits-Conventional-fe5196?logo=conventionalcommits&logoColor=white" alt="Conventional Commits"></a>
+</p>
 
 ---
 
-## 1. Fitur Utama
+## Features
 
-1. **Full Automation Engine** — Backup, deploy, push, build otomatis.
-2. **Scheduler Task Engine** — Jalankan task periodik sesuai jadwal.
-3. **Git Manager** — `git status`, `add`, `commit`, `push`, `pull`, `autopush` langsung dari CLI.
-4. **Script Runner** — Jalankan npm/python/make script dari dalam aura.
-5. **Adaptive AI Learning Engine** — Belajar pola workflow & beri saran.
-6. **Plugin Marketplace** — Install/update plugin dari repository resmi.
-7. **Persistent Logs** — Riwayat aktivitas tersimpan di `core/aura.log`.
-8. **Config File** — Auto-load settings dari `aura.config.json`.
-9. **Command History** — Riwayat command tersimpan antar sesi.
-10. **Event-driven Automation** — Trigger saat file berubah atau network online.
+- **Git manager**: `status`, `log`, `add`, `commit`, `push`, `pull` and a one-step `autopush`, executed without a shell so commit messages are never interpreted.
+- **Script runner**: run npm, Python, make or any command from inside AURA and stop it with `kill`.
+- **Scheduler**: start periodic tasks from the shell or from `aura.config.json`.
+- **File watcher**: react to file changes in the current project.
+- **Network watcher**: know when you are online before you deploy.
+- **Rule-based assistant**: `ask` analyzes errors, deploys, backups and project state locally. No API key, no data leaves your device.
+- **Plugins and marketplace**: install plugins from a file, a URL or the official index. AutoBackup and AutoDeploy are bundled.
+- **Persistent memory, history and logs**: stored in `~/.aura`, so upgrades never erase them.
+- **Project detection**: recognizes Node.js, Python, Go, Rust, PHP, Ruby, Java, Flutter, .NET and C/C++ projects.
 
----
+## Installation
 
-## 2. Instalasi
+Requires Node.js 18 or newer. On Termux:
 
-### Via GitHub
 ```bash
-git clone https://github.com/djunekz/aura
-cd aura
-npm install
+pkg install nodejs git
 ```
 
-### Via NPM
+From npm:
+
 ```bash
 npm install -g aura-terminal
 ```
 
----
+From source:
 
-## 3. Menjalankan AURA
+```bash
+git clone https://github.com/djunekz/aura
+cd aura
+npm install
+npm start
+```
+
+## Quick start
+
 ```bash
 aura
 ```
 
----
+```text
+aura> identity set Ada
+aura> git autopush fix: update configuration
+aura> run npm run build
+aura> scheduler add Heartbeat 600
+aura> ask error
+```
 
-## 4. Perintah Lengkap
+Type `help` for the full menu, `exit` to leave. Useful flags: `aura --version` and `aura --help`.
 
-### System
-| Perintah | Fungsi |
-|----------|--------|
-| `status` | Status kernel & project |
-| `context` | Tipe project terdeteksi |
-| `identity` | Tampilkan identitas user |
-| `identity set <nama>` | Ubah nama user |
-| `help` | Tampilkan semua perintah |
-| `exit` | Keluar dari AURA |
+## Commands
 
-### Memory
-| Perintah | Fungsi |
-|----------|--------|
-| `memory` | Lihat semua data memory |
-| `memory set <key> <val>` | Simpan data |
-| `memory get <key>` | Ambil data |
-| `memory delete <key>` | Hapus key |
-| `memory clear` | Kosongkan semua |
+| Group | Commands |
+|-------|----------|
+| System | `status` `context` `identity` `identity set <name>` `help` `exit` |
+| Memory | `memory` `memory set <key> <value>` `memory get <key>` `memory delete <key>` `memory clear` |
+| Git | `git status` `git log [n]` `git add [paths]` `git commit [message]` `git push [remote] [branch]` `git pull [remote] [branch]` `git autopush [message]` |
+| Runner | `run` `run <command>` `kill` |
+| Watcher | `watch on` `watch off` |
+| Network | `network on` `network off` |
+| AI | `ask <question>` |
+| Plugins | `plugin list` `plugin install <path>` `plugin install-url <url>` `plugin update <name>` |
+| Marketplace | `marketplace list` `marketplace install <name>` |
+| Scheduler | `scheduler list` `scheduler add <name> <seconds>` `scheduler stop [id or name]` |
+| Logs | `logs [n]` `logs clear` |
+| Config | `config` `config init` `config set <key> <value>` |
+| World | `world status` `world user <id> <key> <value>` `world project <name> <key> <value>` |
+| History | `history` |
 
-### Git *(baru)*
-| Perintah | Fungsi |
-|----------|--------|
-| `git status` | Lihat status repo |
-| `git log [n]` | Lihat n commit terakhir (default 5) |
-| `git add [path]` | Stage file (default `.`) |
-| `git commit [pesan]` | Commit dengan pesan |
-| `git push [remote] [branch]` | Push ke remote |
-| `git pull [remote] [branch]` | Pull dari remote |
-| `git autopush [pesan]` | Add + commit + push sekaligus |
+Details and behavior of every command are in the [command reference](docs/commands.md).
 
-### Script Runner *(baru)*
-| Perintah | Fungsi |
-|----------|--------|
-| `run` | Tampilkan script tersedia |
-| `run <perintah>` | Jalankan perintah (npm, python, make, dll) |
-| `kill` | Hentikan proses yang sedang berjalan |
+## Configuration
 
-### Watcher & Network
-| Perintah | Fungsi |
-|----------|--------|
-| `watch on / off` | Aktifkan/matikan file watcher |
-| `network on / off` | Aktifkan/matikan network watcher |
-
-### AI
-| Perintah | Fungsi |
-|----------|--------|
-| `ask <pertanyaan>` | Tanya AI tentang project, error, deploy, dll |
-
-### Plugin
-| Perintah | Fungsi |
-|----------|--------|
-| `plugin list` | Lihat plugin terinstall |
-| `plugin install <path>` | Install plugin lokal |
-| `plugin install-url <url>` | Install plugin dari URL |
-| `plugin update <nama>` | Update plugin |
-| `marketplace list` | Lihat plugin marketplace |
-| `marketplace install <nama>` | Install dari marketplace |
-
-### Scheduler
-| Perintah | Fungsi |
-|----------|--------|
-| `scheduler list` | Lihat task aktif |
-| `scheduler add <nama> <detik>` | Tambah task periodik |
-| `scheduler stop` | Hentikan semua task |
-| `scheduler stop <id\|nama>` | Hentikan task tertentu |
-
-### Logs *(baru)*
-| Perintah | Fungsi |
-|----------|--------|
-| `logs` | Tampilkan 20 log terakhir |
-| `logs <n>` | Tampilkan n log terakhir |
-| `logs clear` | Kosongkan log |
-
-### Config *(baru)*
-| Perintah | Fungsi |
-|----------|--------|
-| `config` | Tampilkan config saat ini |
-| `config init` | Buat `aura.config.json` template |
-| `config set <key> <val>` | Ubah nilai config |
-
-### Lainnya
-| Perintah | Fungsi |
-|----------|--------|
-| `history` | Tampilkan command history (30 terakhir) |
-| `world status` | Lihat data users & projects |
-| `world user <id> <key> <val>` | Update data user |
-| `world project <nama> <key> <val>` | Update data project |
-
----
-
-## 5. Config File (`aura.config.json`)
-
-Buat dengan `config init` lalu edit:
+AURA reads `aura.config.json` from the folder where it starts. Create one with `config init`:
 
 ```json
 {
   "autoWatch": false,
   "autoScheduler": [
-    { "name": "AutoBackup", "interval": 300 }
+    { "name": "Heartbeat", "interval": 300 }
   ],
-  "identity": "Nama Kamu",
+  "identity": "Ada",
   "theme": "default"
 }
 ```
 
-Config ini akan di-load otomatis setiap AURA dijalankan.
+State (memory, history, logs, installed plugins) is stored in `~/.aura`. Set `AURA_HOME` to change the location. See [Configuration](docs/configuration.md).
 
----
+## Plugins
 
-## 6. Contoh Workflow
+A plugin is one ES module that exports a name, a version and an `init(kernel)` function:
 
-### Auto push setiap 10 menit
-```text
-scheduler add GitPush 600
-```
-> Perlu plugin AutoDeploy untuk action custom
+```js
+export default {
+  name: 'ChangeLogger',
+  version: '1.0.0',
+  description: 'Writes every file change to the AURA log',
 
-### Git autopush cepat
-```text
-git autopush fix: update konfigurasi
-```
+  init(kernel) {
+    const previous = kernel.watcher.handleEvent.bind(kernel.watcher)
 
-### Jalankan build
-```text
-run npm run build
-```
-
-### Cek error terakhir
-```text
-ask error
+    kernel.watcher.handleEvent = (event, filepath) => {
+      if (event === 'change') kernel.logger.info(`changed: ${filepath}`)
+      previous(event, filepath)
+    }
+  },
+}
 ```
 
----
+Plugins are not sandboxed, so only install code you trust. Read the [plugin guide](docs/plugins.md) for the API, testing and marketplace submission.
 
-## 7. Environment Variables
+## Documentation
 
-```bash
-export GITHUB_TOKEN=ghp_xxxxyyyyzzz   # untuk AutoDeploy
-```
+| Guide | Topic |
+|-------|-------|
+| [Getting started](docs/getting-started.md) | Install, first run, data location |
+| [Command reference](docs/commands.md) | Every command |
+| [Configuration](docs/configuration.md) | Config file, environment, state files |
+| [Plugins](docs/plugins.md) | Write, test and publish plugins |
+| [Architecture](docs/architecture.md) | Modules and startup sequence |
+| [Troubleshooting](docs/troubleshooting.md) | Common problems |
+| [Development](docs/development.md) | Tests, CI and releases |
 
----
+## Contributing
 
-## 8. Kontribusi
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first, then open an issue or a pull request. Please follow the [Code of Conduct](CODE_OF_CONDUCT.md). To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
-1. Buat pull request di GitHub.
-2. Submit plugin ke marketplace.
-3. Selalu test plugin di sandbox sebelum release.
+Every user-facing change is recorded in the [changelog](CHANGELOG.md).
 
----
+## License
 
-## 9. Lisensi
-
-MIT License © 2026 djunekz
-
----
-
-**Selamat menggunakan AURA**
+[MIT](LICENSE) © 2026 djunekz

@@ -1,5 +1,14 @@
 node_modules/
 .env
+.env.*
 .npmrc
 *.log
 dist/
+coverage/
+aura_backups/
+aura.config.json
+.aura/
+*.tgz
+.DS_Store
+.idea/
+.vscode/

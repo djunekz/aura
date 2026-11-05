@@ -1,50 +1,57 @@
-import { fileURLToPath } from 'url';
-import path from 'path';
-import fs from 'fs';
-import chalk from 'chalk';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import fs from 'fs'
+import { dataPath } from './paths.js'
+import { assertSafeKey } from './safe.js'
 
 class World {
   constructor() {
-    this.filePath = path.join(__dirname, 'world.json');
-    this.state = {};
-    this.loadWorld();
+    this.filePath = dataPath('world.json')
+    this.state = { users: {}, projects: {} }
+    this.loadWorld()
   }
 
   loadWorld() {
-    if(fs.existsSync(this.filePath)){
-      this.state = JSON.parse(fs.readFileSync(this.filePath,'utf-8'));
-    } else {
-      this.state = { users: {}, projects: {} };
-      this.saveWorld();
+    if (!fs.existsSync(this.filePath)) {
+      this.saveWorld()
+      return
+    }
+    try {
+      const parsed = JSON.parse(fs.readFileSync(this.filePath, 'utf-8'))
+      this.state = {
+        users: parsed.users || {},
+        projects: parsed.projects || {},
+      }
+    } catch {
+      this.state = { users: {}, projects: {} }
     }
   }
 
   saveWorld() {
-    fs.writeFileSync(this.filePath, JSON.stringify(this.state, null, 2));
+    fs.writeFileSync(this.filePath, JSON.stringify(this.state, null, 2))
   }
 
   updateUser(userId, data) {
-    if(!this.state.users[userId]) this.state.users[userId] = {};
-    Object.assign(this.state.users[userId], data);
-    this.saveWorld();
+    assertSafeKey(userId)
+    Object.keys(data).forEach(assertSafeKey)
+    if (!this.state.users[userId]) this.state.users[userId] = {}
+    Object.assign(this.state.users[userId], data)
+    this.saveWorld()
   }
 
   getUser(userId) {
-    return this.state.users[userId] || {};
+    return this.state.users[userId] || {}
   }
 
   updateProject(projectName, data) {
-    if(!this.state.projects[projectName]) this.state.projects[projectName] = {};
-    Object.assign(this.state.projects[projectName], data);
-    this.saveWorld();
+    assertSafeKey(projectName)
+    Object.keys(data).forEach(assertSafeKey)
+    if (!this.state.projects[projectName]) this.state.projects[projectName] = {}
+    Object.assign(this.state.projects[projectName], data)
+    this.saveWorld()
   }
 
   getProject(projectName) {
-    return this.state.projects[projectName] || {};
+    return this.state.projects[projectName] || {}
   }
 }
 
-export default World;
+export default World
