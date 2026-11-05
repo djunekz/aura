@@ -28,6 +28,14 @@ export function assertInstallableUrl(value) {
   return filename
 }
 
+function ensurePluginsDir(dir) {
+  fs.mkdirSync(dir, { recursive: true })
+  const manifest = path.join(dir, 'package.json')
+  if (!fs.existsSync(manifest)) {
+    fs.writeFileSync(manifest, JSON.stringify({ type: 'module', private: true }, null, 2) + '\n')
+  }
+}
+
 class PluginManager {
   constructor(kernel) {
     this.kernel = kernel
@@ -37,7 +45,7 @@ class PluginManager {
   }
 
   async loadPlugins() {
-    fs.mkdirSync(this.pluginsDir, { recursive: true })
+    ensurePluginsDir(this.pluginsDir)
 
     for (const dir of [this.pluginsDir, this.builtinDir]) {
       if (!fs.existsSync(dir)) continue
@@ -89,7 +97,7 @@ class PluginManager {
         console.log(chalk.red('❌ File plugin harus berakhiran .js dan bernama sederhana.'))
         return
       }
-      fs.mkdirSync(this.pluginsDir, { recursive: true })
+      ensurePluginsDir(this.pluginsDir)
       fs.copyFileSync(pluginPath, path.join(this.pluginsDir, filename))
       console.log(chalk.green(`✅ Plugin installed: ${filename}`))
       console.log(chalk.gray('   Restart aura untuk memuat plugin baru.'))
@@ -110,7 +118,7 @@ class PluginManager {
         maxContentLength: MAX_PLUGIN_BYTES,
         maxBodyLength: MAX_PLUGIN_BYTES,
       })
-      fs.mkdirSync(this.pluginsDir, { recursive: true })
+      ensurePluginsDir(this.pluginsDir)
       fs.writeFileSync(path.join(this.pluginsDir, filename), res.data)
       console.log(chalk.green(`✅ Plugin disimpan: ${filename}`))
       console.log(chalk.gray('   Restart aura untuk memuat plugin baru.'))

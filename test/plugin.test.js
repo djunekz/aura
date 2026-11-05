@@ -54,6 +54,13 @@ describe('PluginManager', () => {
     assert.equal(manager.plugins.find(p => p.name === 'AutoBackup').version, '9.9.9')
   })
 
+  it('marks the user plugin folder as ES modules so every Node version can load it', async () => {
+    const manager = new PluginManager(fakeKernel())
+    await manager.loadPlugins()
+    const manifest = JSON.parse(fs.readFileSync(path.join(userDir, 'package.json'), 'utf-8'))
+    assert.equal(manifest.type, 'module')
+  })
+
   it('logs and skips plugins that fail to load', async () => {
     fs.mkdirSync(userDir, { recursive: true })
     fs.writeFileSync(path.join(userDir, 'broken.js'), 'export default {')

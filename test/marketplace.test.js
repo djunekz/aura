@@ -45,6 +45,7 @@ describe('marketplace index', () => {
         description: 'x',
       },
     ])
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ type: 'module' }))
     fs.mkdirSync(path.join(dir, 'core', 'plugins'), { recursive: true })
     fs.copyFileSync(
       path.join(root, 'core', 'plugins', 'autobackup.js'),

@@ -50,6 +50,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The logger re-read the whole log file on every write. It now checks the size every 50 writes.
 - Unused imports and variables removed from several modules.
 
+- Plugins installed in `~/.aura/plugins` failed to load on Node.js versions before 22.7 because the folder was not marked as ES modules. AURA now creates a `package.json` with `"type": "module"` there.
+
 ### Removed
 
 - Unused dependencies `form-data`, `fs-extra`, `inquirer` and `xml2js`.
@@ -57,6 +59,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Security
 
+- Updated `axios` and its transitive dependencies `follow-redirects` and `form-data` to patched versions, which resolves the advisories reported by `npm audit`.
+- Added an `overrides` entry that pins `minimatch` to a patched release inside the ESLint toolchain, so Dependabot security updates no longer fail on the `eslint` downgrade path.
 - Prevented shell injection through `git commit`, `git add` and the other git commands.
 - Prevented prototype pollution through user-controlled keys.
 - Development history and memory data are no longer shipped inside the npm package.

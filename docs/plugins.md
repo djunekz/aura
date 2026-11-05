@@ -28,7 +28,7 @@ export default {
 
 ## Lifecycle
 
-1. At startup AURA loads every `.js` file from `~/.aura/plugins`, then from the bundled `core/plugins` folder.
+1. At startup AURA loads every `.js` file from `~/.aura/plugins` (it creates a `package.json` with `"type": "module"` there so ES modules work on every supported Node version), then from the bundled `core/plugins` folder.
 2. If two plugins share a `name`, the first one loaded wins. A plugin you installed therefore replaces a bundled plugin of the same name.
 3. `init(kernel)` runs once. Console output during startup is suppressed, so use `kernel.logger` for diagnostics.
 4. A plugin that throws while loading is skipped and a warning is written to `aura.log`. Check it with `logs`.
