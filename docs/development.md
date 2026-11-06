@@ -55,10 +55,11 @@ Use [Conventional Commits](https://www.conventionalcommits.org): `feat:`, `fix:`
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `ci.yml` | Push to `main`, pull requests | Tests on Node 18, 20, 22 and 24, lint, marketplace validation, package dry run, changelog check |
+| `ci.yml` | Push to `main`, pull requests | Tests on Node 22 and 24, lint, marketplace validation, package dry run, changelog check |
 | `codeql.yml` | Push, pull requests, weekly | Static security analysis |
 | `dependency-review.yml` | Pull requests | Blocks dependency changes with high severity advisories |
-| `release.yml` | Push of a `vX.X.X` tag | Verifies the tag, publishes to npm and creates the GitHub release |
+| `release.yml` | Push of a `vX.X.X` tag | Verifies the tag, publishes to npm, creates the GitHub release, then calls `github-packages.yml` |
+| `github-packages.yml` | Called by `release.yml`, or run manually | Publishes the tag to GitHub Packages as `@djunekz/aura-terminal` |
 
 Dependabot opens weekly updates for npm packages and GitHub Actions.
 
@@ -94,5 +95,7 @@ Pushing the tag starts the `Release` workflow, which:
 5. Creates a GitHub release titled `Aura vx.x.x` with those notes, or updates it if it already exists
 
 Tags with a suffix such as `v0.11.0-beta.1` are published to npm under the `next` tag and marked as pre-releases on GitHub.
+
+The same version is also published to GitHub Packages under the scoped name `@djunekz/aura-terminal`, using the built-in `GITHUB_TOKEN`. To publish an older tag there, open **Actions**, choose **Publish to GitHub Packages**, click **Run workflow** and enter the tag. Installing from GitHub Packages requires authentication even for public packages, so npm remains the recommended source for users.
 
 If a run fails, fix the cause and re-run the workflow from the Actions tab. It is safe to re-run because already published versions and existing releases are detected.

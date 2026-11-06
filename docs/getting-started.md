@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Node.js 18 or newer
+- Node.js 22.22 or newer
 - Git, only if you want to use the `git` commands
 
 On Termux:

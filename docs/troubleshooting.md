@@ -1,5 +1,13 @@
 # Troubleshooting
 
+## npm prints "Unsupported engine" warnings
+
+AURA and its dependencies require Node.js 22.22 or newer. Check your version with `node --version` and upgrade if it is older. On Termux:
+
+```bash
+pkg upgrade nodejs
+```
+
 ## The `aura` command is not found after installing
 
 npm installed the binary in a folder that is not on your `PATH`. Find it:

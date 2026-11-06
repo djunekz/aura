@@ -1,0 +1,74 @@
+name: Publish to GitHub Packages
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Git tag to publish, for example v0.11.0
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Git tag to publish, for example v0.11.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Publish ${{ inputs.tag }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate tag
+        id: meta
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          case "$TAG" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *)
+              echo "Tag must look like v1.2.3"
+              exit 1
+              ;;
+          esac
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          case "$VERSION" in
+            *-*) echo "npm_tag=next" >> "$GITHUB_OUTPUT" ;;
+            *) echo "npm_tag=latest" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          scope: "@djunekz"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Scope the package name for GitHub Packages
+        run: npm pkg set name=@djunekz/aura-terminal
+
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          NPM_TAG: ${{ steps.meta.outputs.npm_tag }}
+        run: |
+          if npm view "@djunekz/aura-terminal@$VERSION" version > /dev/null 2>&1; then
+            echo "@djunekz/aura-terminal@$VERSION is already on GitHub Packages, skipping publish"
+          else
+            npm publish --ignore-scripts --tag "$NPM_TAG"
+          fi

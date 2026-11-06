@@ -45,7 +45,7 @@
 
 ## Installation
 
-Requires Node.js 18 or newer. On Termux:
+Requires Node.js 22.22 or newer. On Termux:
 
 ```bash
 pkg install nodejs git

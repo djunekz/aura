@@ -6,7 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- The release workflow now also publishes each tag to GitHub Packages as `@djunekz/aura-terminal`, through the reusable `github-packages.yml` workflow. The same workflow can be run manually with a tag to publish older versions.
+
+### Changed
+
+- The minimum supported Node.js version is now 22.22. The dependency upgrades to `chalk` 6, `chokidar` 6 and `is-online` 12 declare Node 22.22, 22 and 20 as their minimum, so the previous `>=18` promise in `package.json` was no longer accurate. The CI matrix now covers Node 22 and 24. Node 18 and 20 have reached end of life.
+
 ### Fixed
+
+- `core/*.json` files are excluded from the published package even if they exist in the working tree, so local state can never be shipped to npm.
 
 - Plugin tests no longer fail intermittently on Node 20. The bundled plugins print a startup message, and that output could corrupt the test runner's result stream (`Unable to deserialize cloned data`). The tests now capture console output while loading and installing plugins.
 

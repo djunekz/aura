@@ -96,3 +96,13 @@ jobs:
           else
             gh release create "$TAG" --title "Aura $TAG" --notes-file release-notes.md --verify-tag
           fi
+
+  github-packages:
+    name: Publish to GitHub Packages
+    needs: release
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/github-packages.yml
+    with:
+      tag: ${{ github.ref_name }}
