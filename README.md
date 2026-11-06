@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="AURA interactive shell showing the main command menu" width="760">
+  <img src="https://github.com/djunekz/aura/blob/main/assets/logo.svg" alt="AURA interactive shell showing the main command menu" width="760">
 </p>
 
 <h1 align="center">AURA</h1>
